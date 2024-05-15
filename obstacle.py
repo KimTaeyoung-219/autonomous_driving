@@ -1,15 +1,17 @@
 import Function_Library as fl
+import Lib_LiDAR as LiDAR
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
 arduino_port = "/dev/cu.usbmodem214201"
-img_num = 0
+lidar_port = "/dev/cu.usbserial-0001"
+img_num = 100
 
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
     env = fl.libCAMERA(wait_value=0)
-    time_check = True
+    time_check = False
     crosswalk = True
     # arduino
     ser = fl.libARDUINO()
@@ -20,7 +22,7 @@ if __name__ == "__main__":
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
 
-    input("if start, press ENTER!!")
+    # input("if start, press ENTER!!")
 
     # Camera Reading..
     while True:
@@ -50,9 +52,10 @@ if __name__ == "__main__":
             crosswalk_image = env.convert_crosswalk_image(image)
             if env.find_crosswalk(crosswalk_image):
                 crosswalk = False
+                # print("find crosswalk!!")
                 # env.send_signal_to_arduino(comm, 0, 0)
                 time.sleep(2)
-                continue
+                # continue
 
         # get coordinate of the target: ans
         if time_check:

@@ -1,15 +1,17 @@
 import Function_Library as fl
+import Lib_LiDAR as LiDAR
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
 arduino_port = "/dev/cu.usbmodem214201"
+lidar_port = "/dev/cu.usbserial-0001"
 img_num = 0
 
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10)
-    time_check = False
+    env = fl.libCAMERA(wait_value=0)
+    time_check = True
     # arduino
     ser = fl.libARDUINO()
     # comm = ser.init(arduino_port, 9600)
@@ -34,7 +36,8 @@ if __name__ == "__main__":
         # extracting valid region from image
         if time_check:
             t2 = time.time()
-        valid_image = env.extract_valid_image(image)
+        resize_image = env.resize_image(image)
+        valid_image = env.extract_valid_image(resize_image)
 
         # extract edges to 1d
         if time_check:
@@ -77,7 +80,7 @@ if __name__ == "__main__":
         if key == "quit":
             break
         elif key == "next":
-            if (img_num == 50):
+            if (img_num == 47):
                 print("Final image!!")
             else:
                 img_num += 1

@@ -1,11 +1,11 @@
 import Function_Library as fl
 import time
-import threading
+import Lib_LiDAR as LiDAR
 import cv2
-import queue
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
 arduino_port = "/dev/cu.usbmodem1201"
+lidar_port = "/dev/cu.usbserial-0001"
 video_file = 'data/testVideo.mp4'
 img_num = 0
 
@@ -14,7 +14,6 @@ if __name__ == "__main__":
     # camera
     env = fl.libCAMERA(wait_value=10)
     time_check = True
-    q = queue.Queue()
     total_time = []
     fetch_time = []
     # arduino

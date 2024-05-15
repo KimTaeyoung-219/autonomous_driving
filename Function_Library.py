@@ -541,10 +541,8 @@ class libCAMERA(object):
         if speed is None:
             return
         print(f"send arduino: {speed}, {angle}")
-        # print(type(speed))
-        # coordinate = 0.1 + angle
 
-        data = struct.pack('ii', speed, angle)
+        data = struct.pack('<HH', speed, angle)
         comm.write(data)
 
         return
@@ -553,10 +551,10 @@ class libCAMERA(object):
         # self.valid_Y = 480
         # self.valid_X = 640
         # self.center_point = (470, 320)
-        x_start = 280
-        x_end = 360
+        x_start = 260
+        x_end = 380
         y_start = 440
-        y_end = 480
+        y_end = 450
         total = (x_end - x_start) * (y_end - y_start)
         num = 0
         for x in range(x_start, x_end):
@@ -566,7 +564,7 @@ class libCAMERA(object):
                     num += 1
         percentage = num / total
         # print(f"precentage of crosswalk: {percentage}")
-        if percentage > 0.85:
+        if percentage > 0.80:
             return True
         else:
             return False

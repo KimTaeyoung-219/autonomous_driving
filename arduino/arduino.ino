@@ -27,24 +27,31 @@ void setup(){
 
 void loop(){
   int len;
-  if ((len = Serial.available()) >= 8) {
+  if ((len = Serial.available()) >= 4) {
     num+=1;
-    Serial.readBytes((char*)&speed, 4);
-    Serial.readBytes((char*)&coord, 4);
+    // Serial.readBytes((char*)&speed, 4);
+    // Serial.readBytes((char*)&coord, 4);
 
-    speed = 60;
+    uint8_t buffer[4];
+    Serial.readBytes(buffer, 4);
+
+    memcpy(&speed, buffer, sizeof(uint16_t));
+    memcpy(&coord, buffer + sizeof(uint16_t), sizeof(uint16_t));
+
+    int left_speed = speed;
+    int right_speed = speed
 
     motor_forward(motorA1, motorA2, speed);
     motor_forward(motorA3, motorA4, speed);
 
     val = potentiometer_Read(analogPin);
 
-    if (num%10000 == 0){
+    // if (num%10000 == 0){
       Serial.print("speed: ");
       Serial.println(speed);
       Serial.print("coordinate: ");
       Serial.println(coord);
-    }
+    // }
     
     if(val<coord){
       analogWrite(motorDirection1, LOW);
