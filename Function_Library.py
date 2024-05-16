@@ -95,6 +95,9 @@ class libLIDAR(object):
         self.rpm = 0
         self.lidar = RPLidar(port)
         self.scan = []
+        self.q = queue.Queue()
+        self.t = None
+        self.thread_event = None
 
     def init(self):
         info = self.lidar.get_info()
@@ -116,7 +119,42 @@ class libLIDAR(object):
             if distance > MIN_DISTANCE:
                 scan_list.append((quality, angle, distance))
 
+    def fetch_scanning(self):
+        self.thread_event = threading.Event()
+        self.t = threading.Thread(target=self.fetch_scanning_threads, args=(self.thread_event,))
+        self.t.start()
+        return
+
+    def check_scanning(self):
+        # if self.t is not None and self.t.is_alive():
+        #     return False
+        if self.q.empty():
+            return False
+        return True
+
+    def read_scanning(self):
+        data = self.q.get()
+        self.t = None
+        return data
+
+    def fetch_scanning_threads(self, event):
+        scan_list = []
+        iterator = self.lidar.iter_measures(SCAN_TYPE, MAX_BUFFER_SIZE)
+        for new_scan, quality, angle, distance in iterator:
+            if event.is_set():
+                return
+            if new_scan:
+                if len(scan_list) > SAMPLE_RATE:
+                    np_data = np.array(list(scan_list))
+                    self.q.put(np_data[:, 1:])
+                scan_list = []
+            if distance > MIN_DISTANCE:
+                scan_list.append((quality, angle, distance))
+
     def stop(self):
+        self.thread_event.set()
+        if self.t is not None:
+            self.t.join()
         self.lidar.stop()
         self.lidar.stop_motor()
         self.lidar.disconnect()
@@ -142,6 +180,16 @@ class libLIDAR(object):
         condition = np.where((data[:, 0] < maxAngle) & (data[:, 0] > minAngle) & (data[:, 1] < maxDist) & (data[:, 1] > minDist))
         return data[condition]
 
+    def get_far_distance(self, scan, minAngle, maxAngle):
+        datas = self.getAngleRange(scan, minAngle, maxAngle)
+        max_idx = datas[:, 1].argmax()
+        return datas[max_idx]
+
+    def get_near_distance(self, scan, minAngle, maxAngle):
+        datas = self.getAngleRange(scan, minAngle, maxAngle)
+        min_idx = datas[:, 1].argmin()
+        return datas[min_idx]
+
 
 """
 -------------------------------------------------------------------
@@ -152,7 +200,7 @@ class libLIDAR(object):
 """
 # noinspection PyMethodMayBeStatic
 class libCAMERA(object):
-    def __init__(self, wait_value = 0, max_speed = 100):
+    def __init__(self, wait_value = 0, max_speed = 120):
         self.capnum = 0
         self.wait_value = wait_value
         self.image_num = 200
@@ -172,9 +220,14 @@ class libCAMERA(object):
         self.max_speed = max_speed
         self.max_angle = 45
         self.max_voltage = 16
+        self.max_lane_width = 25
+        self.min_lane_width = 10
         self.t = None
         self.direction = None
         self.queue = queue.Queue()
+        self.left_lane = None
+        self.right_lane = None
+        self.cur_lane = "right"
 
     def wait_key(self):
         key = cv2.waitKey(self.wait_value) & 0xFF
@@ -415,6 +468,36 @@ class libCAMERA(object):
                 return False
         return True
 
+    def count_upper(self, img, x, y):
+        uy = y
+        count = 0
+        for i in range(100):
+            # print("asdjlkf")
+            if (x - i) == 0:
+                # print("a")
+                return count
+            if uy == 0 or uy == self.valid_X:
+                # print("b")
+                return count
+            if img[x - i][uy] == 255:
+                uy = uy
+                count += 1
+            elif img[x - i][uy - 1] == 255:
+                uy = uy - 1
+                count += 1
+            elif img[x - i][uy + 1] == 255:
+                uy = uy + 1
+                count += 1
+            elif img[x - i][uy - 2] == 255:
+                uy = uy - 2
+                count += 1
+            elif img[x - i][uy + 2] == 255:
+                uy = uy + 2
+                count += 1
+            else:
+                return count
+        return count
+
     def get_line_Canny_with_X_left(self, img, result, x, Y):
         ans = None
         flag = False
@@ -425,7 +508,7 @@ class libCAMERA(object):
             if img[x][y] == 255:
                 if not self.check_upper(img, result, x, y):
                     continue
-                for inc in range(10, 25):
+                for inc in range(self.min_lane_width, self.max_lane_width):
                     if img[x][y - inc] == 255:
                         pre.append(y - inc)
                 for y2 in pre:
@@ -436,10 +519,10 @@ class libCAMERA(object):
                         ans = (y, y2)
                         flag = True
                         self.draw_car_line(img, result, x, y2, y)
-                        for y3 in range(y, y2):
-                            img[x][y3] = 155
-                            # result[x][y3]=155
-                        break
+                        # for y3 in range(y, y2):
+                        #     img[x][y3] = 155
+                        #     result[x][y3]=155
+                        return result, ans
         # if ans is not None:
         #     draw_car_line(img, result, x, ans[0], ans[1])
         return result, ans
@@ -454,7 +537,7 @@ class libCAMERA(object):
             if img[x][y] == 255:
                 if not self.check_upper(img, result, x, y):
                     continue
-                for inc in range(10, 25):
+                for inc in range(self.min_lane_width, self.max_lane_width):
                     if img[x][y + inc] == 255:
                         pre.append(y + inc)
                 for y2 in pre:
@@ -465,10 +548,10 @@ class libCAMERA(object):
                         ans = (y, y2)
                         flag = True
                         self.draw_car_line(img, result, x, y, y2)
-                        for y3 in range(y, y2):
-                            img[x][y3] = 155
-                            # result[x][y3]=155
-                        break
+                        # for y3 in range(y, y2):
+                        #     img[x][y3] = 155
+                        #     result[x][y3]=155
+                        return result, ans
         # if ans is not None:
         #     self.draw_car_line(img, result, x, ans[0], ans[1])
         return result, ans
@@ -496,6 +579,10 @@ class libCAMERA(object):
                     # width between two car line should be in range 150~250
                     if width > 250 or width < 150:
                         continue
+                    # self.left_lane = int((left[0]+left[1])/2)
+                    # self.right_lane = int((right[0]+right[1])/2)
+                    self.left_lane = left[0]
+                    self.right_lane = right[0]
                     Y = int((left[0] + right[0]) / 2)
                     ans.append((x - (inc * jump), Y))
                     self.draw_dot(self.result, x - (inc * jump), Y)
@@ -512,6 +599,8 @@ class libCAMERA(object):
         return self.result, ans
 
     def get_speed_angle(self, ans):
+        if ans is None:
+            return None, None
         self.draw_dot(self.result, self.center_point[0], self.center_point[1])
         if len(ans) != 0:
             x = ans[0][0]
@@ -531,7 +620,7 @@ class libCAMERA(object):
                 coord = 0
             elif coord > 28:
                 coord = 28
-            speed = 100
+            speed = self.max_speed
             # print(f"speed: {speed}, angle: {angle}, tangent: {tangent}, angle: {angle_in_degrees}")
             # print(f"coordinate: {coord}")
             return speed, coord
@@ -571,6 +660,51 @@ class libCAMERA(object):
 
     def find_obstacle(self):
         return False
+
+    def find_car_lane(self, image, ans):
+        if len(ans) == 0:
+            return image
+        # _, left = self.get_line_Canny_with_X_left(image, self.result, ans[0][0], self.center_point[1])
+        # _, right = self.get_line_Canny_with_X_right(image, self.result, ans[0][0], self.center_point[1])
+        # left = int((left[0]+left[1])/2)
+        # right = int((right[0]+right[1])/2)
+        X = ans[0][0]
+
+        left_count = self.count_upper(image, X, self.left_lane)
+        right_count = self.count_upper(image, X, self.right_lane)
+
+        self.draw_dot(self.edges, X, self.left_lane)
+        self.draw_dot(self.edges, X, self.right_lane)
+        # print(f"left count: {left_count}, right count: {right_count}")
+
+        if left_count > right_count:
+            self.cur_lane = "left"
+        else:
+            self.cur_lane = "right"
+        return image
+
+    def change_car_lane(self, ans, lane):
+        if len(ans) == 0:
+            return ans
+        # print(f"current lane: {self.cur_lane}, change it to {lane}")
+        if lane == "left" and self.cur_lane == "right":
+            Y = 2 * self.left_lane - ans[0][1]
+            if Y <= 0:
+                Y = 0
+            ans = [(ans[0][0], Y)]
+            self.draw_dot(self.edges, ans[0][0], ans[0][1])
+            self.draw_dot(self.result, ans[0][0], ans[0][1])
+            return ans
+        if lane == "right" and self.cur_lane == "left":
+            Y = 2 * self.right_lane - ans[0][1]
+            if Y >= self.Y_length:
+                Y = self.Y_length - 1
+            ans = [(ans[0][0], Y)]
+            self.draw_dot(self.edges, ans[0][0], ans[0][1])
+            self.draw_dot(self.result, ans[0][0], ans[0][1])
+            return ans
+        return ans
+
 
 
 

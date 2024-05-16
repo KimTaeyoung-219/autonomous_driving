@@ -1,26 +1,31 @@
 import Function_Library as fl
-import Lib_LiDAR as LiDAR
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
 arduino_port = "/dev/cu.usbmodem214201"
 lidar_port = "/dev/cu.usbserial-0001"
-img_num = 100
+img_num = 0
 
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
     env = fl.libCAMERA(wait_value=0)
-    time_check = False
+    time_check = True
     crosswalk = True
+    # change lane to ${change_lane}
+    change_lane = "right"
+    obstacle_detected = True
     # arduino
     ser = fl.libARDUINO()
     # comm = ser.init(arduino_port, 9600)
+    # lidar = fl.libLIDAR(lidar_port)
 
     # Camera Initial Setting
     # ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
+    # LiDAR using Thread
+    # lidar.fetch_scanning()
 
     # input("if start, press ENTER!!")
 
@@ -33,6 +38,11 @@ if __name__ == "__main__":
         # Camera using Thread
         # image = env.read_image_thread()
         # env.fetch_image_camera(channel=ch0)
+
+        # LidAR using Thread
+        # env.fetch_image_camera(channel=ch0)
+        # if lidar.check_scanning() is True:
+        #     lidar_data = lidar.read_scanning()
 
         image = env.file_read("data/image"+str(img_num)+".png")
 
@@ -55,12 +65,23 @@ if __name__ == "__main__":
                 # print("find crosswalk!!")
                 # env.send_signal_to_arduino(comm, 0, 0)
                 time.sleep(2)
+                # env.send_signal_to_arduino(comm, 100, 14)
                 # continue
 
         # get coordinate of the target: ans
         if time_check:
             t4 = time.time()
         result, ans = env.edge_detection(edges)
+
+        if obstacle_detected:
+            if change_lane == "right":
+                change_lane = "left"
+            elif change_lane == "left":
+                change_lane = "right"
+            edges = env.find_car_lane(edges, ans)
+            # print(f"obstacle detected!: change lane to {change_lane}")
+            ans = env.change_car_lane(ans, change_lane)
+            # obstacle_detected = False
 
         # get speed and angle of the car
         if time_check:
@@ -75,8 +96,8 @@ if __name__ == "__main__":
         # print image of final results
         if time_check:
             t7 = time.time()
-        env.image_show(result, edges, image)
-        # env.image_show(image)
+        env.image_show(result, edges)
+        # env.image_show(image, edges)
 
         if time_check:
             t8 = time.time()
@@ -94,7 +115,7 @@ if __name__ == "__main__":
         if key == "quit":
             break
         elif key == "next":
-            if (img_num == 50):
+            if (img_num == 46):
                 print("Final image!!")
             else:
                 img_num += 1
