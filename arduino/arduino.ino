@@ -39,7 +39,7 @@ void loop(){
     memcpy(&coord, buffer + sizeof(uint16_t), sizeof(uint16_t));
 
     int left_speed = speed;
-    int right_speed = speed
+    int right_speed = speed;
 
     motor_forward(motorA1, motorA2, speed);
     motor_forward(motorA3, motorA4, speed);
@@ -47,10 +47,10 @@ void loop(){
     val = potentiometer_Read(analogPin);
 
     // if (num%10000 == 0){
-      Serial.print("speed: ");
-      Serial.println(speed);
-      Serial.print("coordinate: ");
-      Serial.println(coord);
+      // Serial.print("speed: ");
+      // Serial.println(speed);
+      // Serial.print("coordinate: ");
+      // Serial.println(coord);
     // }
     
     if(val<coord){

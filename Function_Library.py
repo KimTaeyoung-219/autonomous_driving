@@ -178,7 +178,12 @@ class libLIDAR(object):
     def getAngleDistanceRange(self, scan, minAngle, maxAngle, minDist, maxDist):
         data = np.array(scan)
         condition = np.where((data[:, 0] < maxAngle) & (data[:, 0] > minAngle) & (data[:, 1] < maxDist) & (data[:, 1] > minDist))
-        return data[condition]
+        # return data[condition]
+        d = len(data[condition])
+        if d > 0:
+            return True
+        else:
+            return False
 
     def get_far_distance(self, scan, minAngle, maxAngle):
         datas = self.getAngleRange(scan, minAngle, maxAngle)
@@ -205,10 +210,10 @@ class libCAMERA(object):
         self.wait_value = wait_value
         self.image_num = 200
         self.row, self.col, self.dim = (0, 0, 0)
-        self.belowX = 100
-        self.upperX = 720
+        self.belowX = 200
+        self.upperX = 420
         self.belowY = 50
-        self.upperY = 600
+        self.upperY = 900
         self.X_length = 1920
         self.Y_length = 1080
         self.valid_Y = 480
@@ -577,7 +582,7 @@ class libCAMERA(object):
                 if (left is not None) and (right is not None):
                     width = int(right[0]-left[0])
                     # width between two car line should be in range 150~250
-                    if width > 250 or width < 150:
+                    if width > 350 or width < 150:
                         continue
                     # self.left_lane = int((left[0]+left[1])/2)
                     # self.right_lane = int((right[0]+right[1])/2)
