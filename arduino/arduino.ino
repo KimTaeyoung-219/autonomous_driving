@@ -41,10 +41,9 @@ void loop(){
     int left_speed = speed;
     int right_speed = speed;
 
-    motor_forward(motorA1, motorA2, speed);
-    motor_forward(motorA3, motorA4, speed);
-
-    val = potentiometer_Read(analogPin);
+    // coordinate : 28 -> left
+    // coordinate : 0 -> right
+    // coordinate : 14 -> middle
 
     // if (num%10000 == 0){
       // Serial.print("speed: ");
@@ -52,7 +51,27 @@ void loop(){
       // Serial.print("coordinate: ");
       // Serial.println(coord);
     // }
+
+    motor_forward(motorA1, motorA2, speed);
+    motor_forward(motorA3, motorA4, speed);
+
+    val = potentiometer_Read(analogPin);
     
+    if(val<coord){
+      analogWrite(motorDirection1, LOW);
+      analogWrite(motorDirection2, 100);
+    }
+    else if(val>coord){
+      analogWrite(motorDirection1, 100);
+      analogWrite(motorDirection2, LOW);
+    }
+    else if(val==coord){
+      analogWrite(motorDirection1, LOW);
+      analogWrite(motorDirection2, LOW);
+    }
+  } else {
+    val = potentiometer_Read(analogPin);
+
     if(val<coord){
       analogWrite(motorDirection1, LOW);
       analogWrite(motorDirection2, 100);

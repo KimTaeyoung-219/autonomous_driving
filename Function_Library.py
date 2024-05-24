@@ -134,7 +134,6 @@ class libLIDAR(object):
 
     def read_scanning(self):
         data = self.q.get()
-        self.t = None
         return data
 
     def fetch_scanning_threads(self, event):
@@ -168,22 +167,23 @@ class libLIDAR(object):
     def getAngleRange(self, scan, minAngle, maxAngle):
         data = np.array(scan)
         condition = np.where((data[:, 0] < maxAngle) & (data[:, 0] > minAngle))
-        return data[condition]
+        # return data[condition]
+        result = True if len(data[condition]) > 0 else False
+        return result
 
     def getDistanceRange(self, scan, minDist, maxDist):
         data = np.array(scan)
         condition = np.where((data[:, 1] < maxDist) & (data[:, 1] > minDist))
-        return data[condition]
+        # return data[condition]
+        result = True if len(data[condition]) > 0 else False
+        return result
 
     def getAngleDistanceRange(self, scan, minAngle, maxAngle, minDist, maxDist):
         data = np.array(scan)
         condition = np.where((data[:, 0] < maxAngle) & (data[:, 0] > minAngle) & (data[:, 1] < maxDist) & (data[:, 1] > minDist))
         # return data[condition]
-        d = len(data[condition])
-        if d > 0:
-            return True
-        else:
-            return False
+        result = True if len(data[condition]) > 0 else False
+        return result
 
     def get_far_distance(self, scan, minAngle, maxAngle):
         datas = self.getAngleRange(scan, minAngle, maxAngle)
