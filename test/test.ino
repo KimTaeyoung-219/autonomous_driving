@@ -29,11 +29,14 @@ void setup(){
 void loop(){
   num += 1;
   int speed = 0;
-  motor_forward(motorA1, motorA2, speed);
-  motor_forward(motorA3, motorA4, speed);
+  // motor_forward(motorA1, motorA2, speed);
+  // motor_forward(motorA3, motorA4, speed);
+  motor_forward(motorA2, motorA1, speed);
+  motor_forward(motorA4, motorA3, speed);
+
 
   // 28: max left, 14: middle, 0: max right
-  coord = 14;
+  coord = 28;
   val = potentiometer_Read(analogPin);
 
   if(val<coord){

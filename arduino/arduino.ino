@@ -13,6 +13,7 @@ int val;
 int num=0;
 int coord;
 int speed;
+int left, right;
 
 void setup(){
   Serial.begin(9600);
@@ -27,42 +28,41 @@ void setup(){
 
 void loop(){
   int len;
-  if ((len = Serial.available()) >= 4) {
+  if ((len = Serial.available()) >= 6) {
     num+=1;
     // Serial.readBytes((char*)&speed, 4);
     // Serial.readBytes((char*)&coord, 4);
+    Serial.println("fdjslks");
+    uint8_t buffer[6];
+    Serial.readBytes(buffer, 6);
 
-    uint8_t buffer[4];
-    Serial.readBytes(buffer, 4);
-
-    memcpy(&speed, buffer, sizeof(uint16_t));
-    memcpy(&coord, buffer + sizeof(uint16_t), sizeof(uint16_t));
-
-    int left_speed = speed;
-    int right_speed = speed;
+    memcpy(&left, buffer, sizeof(uint16_t));
+    memcpy(&right, buffer + sizeof(uint16_t), sizeof(uint16_t));
+    memcpy(&coord, buffer + sizeof(uint16_t) + sizeof(uint16_t), sizeof(uint16_t));
 
     // coordinate : 28 -> left
     // coordinate : 0 -> right
     // coordinate : 14 -> middle
 
-    // if (num%10000 == 0){
-      // Serial.print("speed: ");
-      // Serial.println(speed);
-      // Serial.print("coordinate: ");
-      // Serial.println(coord);
-    // }
+    if (num%100 == 0){
+      Serial.print("speed: ");
+      Serial.println(left);
+      Serial.println(right);
+      Serial.print("coordinate: ");
+      Serial.println(coord);
+    }
 
-    motor_forward(motorA1, motorA2, speed);
-    motor_forward(motorA3, motorA4, speed);
+    motor_forward(motorA1, motorA2, right);
+    motor_forward(motorA3, motorA4, left);
 
     val = potentiometer_Read(analogPin);
     
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 100);
+      analogWrite(motorDirection2, 150);
     }
     else if(val>coord){
-      analogWrite(motorDirection1, 100);
+      analogWrite(motorDirection1, 150);
       analogWrite(motorDirection2, LOW);
     }
     else if(val==coord){
@@ -70,6 +70,7 @@ void loop(){
       analogWrite(motorDirection2, LOW);
     }
   } else {
+    Serial.println("dsfds");
     val = potentiometer_Read(analogPin);
 
     if(val<coord){

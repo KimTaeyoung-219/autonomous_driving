@@ -629,20 +629,22 @@ class libCAMERA(object):
                 if diff is None:
                     if self.cur_lane == "left" and left is not None:
                         diff = self.find_inclination(image, self.result, x - (inc * jump), left[0])
-                        before = (x - (inc * jump), left[0])
-                        # self.draw_dot(image, before[0], before[1])
-                        # self.draw_dot(image, diff[0], diff[1])
-                        self.left_lane = left[0]
-                        self.right_lane = 2 * self.center_point[1] - left[0]
-                        diff = (diff[0] - before[0], diff[1] - before[1])
+                        if diff is not None:
+                            before = (x - (inc * jump), left[0])
+                            # self.draw_dot(image, before[0], before[1])
+                            # self.draw_dot(image, diff[0], diff[1])
+                            self.left_lane = left[0]
+                            self.right_lane = 2 * self.center_point[1] - left[0]
+                            diff = (diff[0] - before[0], diff[1] - before[1])
                     elif self.cur_lane == "right" and right is not None:
                         diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
-                        before = (x - (inc * jump), right[0])
-                        # self.draw_dot(image, before[0], before[1])
-                        # self.draw_dot(image, diff[0], diff[1])
-                        self.left_lane = 2 * self.center_point[1]-before[1]
-                        self.right_lane = before[1]
-                        diff = (diff[0] - before[0], diff[1] - before[1])
+                        if diff is not None:
+                            before = (x - (inc * jump), right[0])
+                            # self.draw_dot(image, before[0], before[1])
+                            # self.draw_dot(image, diff[0], diff[1])
+                            self.left_lane = 2 * self.center_point[1]-before[1]
+                            self.right_lane = before[1]
+                            diff = (diff[0] - before[0], diff[1] - before[1])
             if flag is True:
                 break
         # if vision cannot find both car lane and cannot specify the target point
@@ -681,6 +683,20 @@ class libCAMERA(object):
             elif coord > 28:
                 coord = 28
             speed = self.max_speed
+            if coord <= 0:
+                coord = 0
+            elif coord > 0 and coord <= 4:
+                coord = 4
+            elif coord > 4 and coord <= 10:
+                coord = 10
+            elif coord > 10 and coord < 18:
+                coord = 14
+            elif coord >= 18 and coord < 24:
+                coord = 18
+            elif coord >= 24 and coord < 28:
+                coord = 24
+            elif coord >= 28:
+                coord = 28
             # print(f"speed: {speed}, angle: {angle}, tangent: {tangent}, angle: {angle_in_degrees}")
             # print(f"coordinate: {coord}")
             return speed, coord
@@ -689,9 +705,9 @@ class libCAMERA(object):
     def send_signal_to_arduino(self, comm, speed, angle):
         if speed is None:
             return
-        print(f"send arduino: {speed}, {angle}")
+        # print(f"send arduino: {speed}, {angle}")
 
-        data = struct.pack('<HH', speed, angle)
+        data = struct.pack('<HHH', speed, speed, angle)
         comm.write(data)
 
         return
@@ -752,16 +768,16 @@ class libCAMERA(object):
             if Y <= 0:
                 Y = 0
             ans = [(ans[0][0], Y)]
-            self.draw_dot(self.edges, ans[0][0], ans[0][1])
-            self.draw_dot(self.result, ans[0][0], ans[0][1])
+            # self.draw_dot(self.edges, ans[0][0], ans[0][1])
+            # self.draw_dot(self.result, ans[0][0], ans[0][1])
             return ans
         if lane == "right" and self.cur_lane == "left":
             Y = 2 * self.right_lane - ans[0][1]
             if Y >= self.Y_length:
                 Y = self.Y_length - 1
             ans = [(ans[0][0], Y)]
-            self.draw_dot(self.edges, ans[0][0], ans[0][1])
-            self.draw_dot(self.result, ans[0][0], ans[0][1])
+            # self.draw_dot(self.edges, ans[0][0], ans[0][1])
+            # self.draw_dot(self.result, ans[0][0], ans[0][1])
             return ans
         return ans
 

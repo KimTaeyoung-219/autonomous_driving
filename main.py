@@ -2,23 +2,23 @@ import Function_Library as fl
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
-arduino_port = "/dev/cu.usbmodem214201"
+arduino_port = "/dev/cu.usbmodem1201"
 lidar_port = "/dev/cu.usbserial-0001"
 img_num = 200
 
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=0)
+    env = fl.libCAMERA(wait_value=10, max_speed = 130)
     time_check = False
     # arduino
     ser = fl.libARDUINO()
-    # comm = ser.init(arduino_port, 9600)
+    comm = ser.init(arduino_port, 9600)
 
     # Camera Initial Setting
-    # ch0, ch1 = env.initial_setting(capnum=1)
+    ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
-    # env.fetch_image_camera(channel=ch0)
+    env.fetch_image_camera(channel=ch0)
 
     # Camera Reading..
     while True:
@@ -27,10 +27,10 @@ if __name__ == "__main__":
             t1 = time.time()
         # _, image = env.camera_read(ch0)
         # Camera using Thread
-        # image = env.read_image_thread()
-        # env.fetch_image_camera(channel=ch0)
+        image = env.read_image_thread()
+        env.fetch_image_camera(channel=ch0)
 
-        image = env.file_read("data/image"+str(img_num)+".png")
+        # image = env.file_read("data/image"+str(img_num)+".png")
 
         # extracting valid region from image
         if time_check:
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         # send data to arduino
         if time_check:
             t6 = time.time()
-        # env.send_signal_to_arduino(comm, speed, angle)
+        env.send_signal_to_arduino(comm, speed, angle)
 
         # print image of final results
         if time_check:

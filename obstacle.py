@@ -2,7 +2,7 @@ import Function_Library as fl
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
-arduino_port = "/dev/cu.usbmodem214201"
+arduino_port = "/dev/cu.usbmodem1201"
 lidar_port = "/dev/cu.usbserial-0001"
 img_num = 0
 
@@ -23,24 +23,25 @@ def go_forward(env, image):
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=0, max_speed=70)
-    time_check = True
+    env = fl.libCAMERA(wait_value=10, max_speed=70)
+    time_check = False
     stage_check = True
     # change lane to ${change_lane}
     change_lane = "left"
+    a = 100
     stage = 1
     # arduino
     ser = fl.libARDUINO()
     lidar = None
-    # comm = ser.init(arduino_port, 9600)
+    comm = ser.init(arduino_port, 9600)
     lidar = fl.libLIDAR(lidar_port)
 
     # Camera Initial Setting
-    # ch0, ch1 = env.initial_setting(capnum=1)
+    ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
-    # env.fetch_image_camera(channel=ch0)
+    env.fetch_image_camera(channel=ch0)
     # LiDAR using Thread
-    # lidar.fetch_scanning()
+    lidar.fetch_scanning()
 
     # input("if start, press ENTER!!")
 
@@ -52,15 +53,15 @@ if __name__ == "__main__":
             t1 = time.time()
         # _, image = env.camera_read(ch0)
         # Camera using Thread
-        # image = env.read_image_thread()
-        # env.fetch_image_camera(channel=ch0)
+        image = env.read_image_thread()
+        env.fetch_image_camera(channel=ch0)
 
         # LiDAR using Thread
         # env.fetch_image_camera(channel=ch0)
-        # if lidar.check_scanning() is True:
-        #     lidar_data = lidar.read_scanning()
+        if lidar.check_scanning() is True:
+            lidar_data = lidar.read_scanning()
 
-        image = env.file_read("data/image"+str(img_num)+".png")
+        # image = env.file_read("data/image"+str(img_num)+".png")
 
         # set target point with image
         if time_check:
@@ -70,46 +71,49 @@ if __name__ == "__main__":
         # custom the target point by obstacle detection, lidar data, crosswalk
         if time_check:
             t3 = time.time()
-        if stage is 1:  # when starts, change lane to left immediately
+        if stage == 1:  # when starts, change lane to left immediately
             edges = env.find_car_lane(edges, ans)
             if env.cur_lane == "right":
                 ans = env.change_car_lane(ans, change_lane)
             else:
                 print_stage("STAGE 2", stage_check)
-                stage = 2
-        elif stage is 2: # stay in line when the car move to the left side of obstacle1
+                stage = 3
+        elif stage == 2: # stay in line when the car move to the left side of obstacle1
             if lidar.check_scanning() is True:
+                print("lll")
                 lidar_data = lidar.read_scanning()
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 200, 250)
+                flag = lidar.getAngleDistanceRange(lidar_data, 240, 280, 450, 700)
                 if flag is True:
                     print_stage("STAGE 3", stage_check)
-                    stage = 3
-        elif stage is 3:  # when find obstacle2 in front, change lane to right
-            if lidar.check_scanning() is True:
+                    stage = 4
+        elif stage == 3:  # when find obstacle2 in front, change lane to right
+            if lidar.check_scanning() == True:
                 lidar_data = lidar.read_scanning()
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 200, 250)
-                if flag is True:
+                print("fgh")
+                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 1600, 2000)
+                if flag == True:
                     change_lane = "right"
                     print_stage("STAGE 4", stage_check)
                     stage = 4
-        elif stage is 4:  # change lane to right
+        elif stage == 4:  # change lane to right
             edges = env.find_car_lane(edges, ans)
-            if env.cur_lane == "left":
+            if env.cur_lane == "left" or a != 0:
                 ans = env.change_car_lane(ans, change_lane)
+                a -= 1
             else:
                 print_stage("STAGE 5", stage_check)
                 stage = 5
-        elif stage is 5:  # when find crosswalk_image, stop for 2 sec and move straight
+        elif stage == 5:  # when find crosswalk_image, stop for 2 sec and move straight
             crosswalk_image = env.convert_crosswalk_image(image)
             if env.find_crosswalk(crosswalk_image):
                 time.sleep(2)
-                # env.send_signal_to_arduino(comm, 60, 14)
-                # lidar.stop()
-                # print(f"obstacle terminated")
-                # break
+                env.send_signal_to_arduino(comm, 60, 14)
+                lidar.stop()
+                print(f"obstacle terminated")
+                break
 
         # clear lidar buffer when stage is not using lidar data
-        if stage is 1 or stage is 4 or stage is 5:
+        if stage == 1 or stage == 4 or stage == 5:
             if lidar.check_scanning() is True:
                 lidar_data = lidar.read_scanning()
 
@@ -121,7 +125,7 @@ if __name__ == "__main__":
         # send data to arduino
         if time_check:
             t5 = time.time()
-        # env.send_signal_to_arduino(comm, speed, angle)
+        env.send_signal_to_arduino(comm, speed, angle)
 
         # print image of final results
         if time_check:
