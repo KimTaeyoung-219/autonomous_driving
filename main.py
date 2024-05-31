@@ -4,13 +4,13 @@ import time
 # window: "COM5", mac: "/dev/cu.xxxxx"
 arduino_port = "/dev/cu.usbmodem214201"
 lidar_port = "/dev/cu.usbserial-0001"
-img_num = 0
+img_num = 200
 
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
     env = fl.libCAMERA(wait_value=0)
-    time_check = True
+    time_check = False
     # arduino
     ser = fl.libARDUINO()
     # comm = ser.init(arduino_port, 9600)
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         # print image of final results
         if time_check:
             t7 = time.time()
-        env.image_show(result, edges, image)
+        env.image_show(resize_image, result, edges)
         # env.image_show(image)
 
         if time_check:
@@ -79,13 +79,13 @@ if __name__ == "__main__":
         if key == "quit":
             break
         elif key == "next":
-            if (img_num == 47):
+            if img_num == 47:
                 print("Final image!!")
             else:
                 img_num += 1
                 print("image number: " + str(img_num))
         elif key == "prev":
-            if (img_num == 0):
+            if img_num == 0:
                 print("First image!!")
             else:
                 img_num -= 1

@@ -33,15 +33,15 @@ void loop(){
   motor_forward(motorA3, motorA4, speed);
 
   // 28: max left, 14: middle, 0: max right
-  coord = 0;
+  coord = 14;
   val = potentiometer_Read(analogPin);
 
   if(val<coord){
     analogWrite(motorDirection1, LOW);
-    analogWrite(motorDirection2, 100);
+    analogWrite(motorDirection2, 200);
   }
   else if(val>coord){
-    analogWrite(motorDirection1, 100);
+    analogWrite(motorDirection1, 200);
     analogWrite(motorDirection2, LOW);
   }
   else if(val==coord){

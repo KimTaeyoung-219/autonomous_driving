@@ -435,7 +435,7 @@ class libCAMERA(object):
         return self.valid_image
 
     def convert_image_to_1d(self, image):
-        self.edges = cv2.Canny(image, 80, 120)
+        self.edges = cv2.Canny(image, 200, 300)
         return self.edges
 
     def convert_crosswalk_image(self, image):
@@ -448,7 +448,7 @@ class libCAMERA(object):
         # 점 위로 선이 연결 되어 있는지 확인
         # 10칸 이상 연결 되어 있으면 차 선으로 판단 후 True 반환
         uy = y
-        for i in range(10):
+        for i in range(20):
             if img[x - i][uy] == 255:
                 # img[x-i][uy]=155
                 # result[x - i][uy] = 155
@@ -472,6 +472,38 @@ class libCAMERA(object):
             else:
                 return False
         return True
+
+    def find_inclination(self, img, result, x, y):
+        uy = y
+        cx = 0
+        ux = x
+        for i in range(20):
+            ux = x - i
+            if (x - i) == 0:
+                # print("a")
+                return None
+            if uy == 0 or uy == self.valid_X:
+                # print("b")
+                return None
+            if img[x - i][uy] == 255:
+                uy = uy
+                cx += 1
+            elif img[x - i][uy - 1] == 255:
+                uy = uy - 1
+                cx += 1
+            elif img[x - i][uy + 1] == 255:
+                uy = uy + 1
+                cx += 1
+            elif img[x - i][uy - 2] == 255:
+                uy = uy - 2
+                cx += 1
+            elif img[x - i][uy + 2] == 255:
+                uy = uy + 2
+                cx += 1
+            else:
+                return None
+        ans = (ux, uy)
+        return ans
 
     def count_upper(self, img, x, y):
         uy = y
@@ -563,16 +595,17 @@ class libCAMERA(object):
 
     def edge_detection(self, image):
         ans = []
-        X = [420, 370, 320, 270]
+        X = [450, 400]
         Y = self.center_point[1]
         for i in range(self.valid_X):
             for x in X:
-                self.result[x][i]=155
-                image[x][i]=255
-
+                self.result[x][i] = 155
+                image[x][i] = 255
+        diff, before, flag = None, None, None
         jump = 10
+        # find target point using 2 car lanes
+        # if we find both car lane, we set the target point in middle of car lanes
         for x in X:
-            flag = False
             for inc in range(5):
                 self.result, left = self.get_line_Canny_with_X_left(image, self.result, x - (inc * jump), Y)
                 self.result, right = self.get_line_Canny_with_X_right(image, self.result, x - (inc * jump), Y)
@@ -592,15 +625,37 @@ class libCAMERA(object):
                     ans.append((x - (inc * jump), Y))
                     self.draw_dot(self.result, x - (inc * jump), Y)
                     self.draw_dot(image, x - (inc * jump), Y)
-                    flag = True
-                    break
-                elif left is not None:
-                    continue
-                elif right is not None:
-                    continue
+                    return self.result, ans
+                if diff is None:
+                    if self.cur_lane == "left" and left is not None:
+                        diff = self.find_inclination(image, self.result, x - (inc * jump), left[0])
+                        before = (x - (inc * jump), left[0])
+                        # self.draw_dot(image, before[0], before[1])
+                        # self.draw_dot(image, diff[0], diff[1])
+                        self.left_lane = left[0]
+                        self.right_lane = 2 * self.center_point[1] - left[0]
+                        diff = (diff[0] - before[0], diff[1] - before[1])
+                    elif self.cur_lane == "right" and right is not None:
+                        diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
+                        before = (x - (inc * jump), right[0])
+                        # self.draw_dot(image, before[0], before[1])
+                        # self.draw_dot(image, diff[0], diff[1])
+                        self.left_lane = 2 * self.center_point[1]-before[1]
+                        self.right_lane = before[1]
+                        diff = (diff[0] - before[0], diff[1] - before[1])
             if flag is True:
                 break
-
+        # if vision cannot find both car lane and cannot specify the target point
+        # calculate the target point by inclination of single car lane
+        if diff is not None:
+            ans.append((self.center_point[0]+diff[0], self.center_point[1]+diff[1]))
+            # self.draw_dot(image, self.center_point[0], self.center_point[1])
+            # self.draw_dot(image, self.center_point[0]+diff[0], self.center_point[1]+diff[1])
+            # self.draw_dot(self.result, self.center_point[0] + diff[0], self.center_point[1] + diff[1])
+            # self.draw_dot(self.result, ans[0][0], ans[0][1])
+            # self.draw_dot(self.result, before[0], self.left_lane)
+            # self.draw_dot(self.result, before[0], self.right_lane)
+            return self.result, ans
         return self.result, ans
 
     def get_speed_angle(self, ans):
