@@ -32,7 +32,6 @@ void loop(){
     num+=1;
     // Serial.readBytes((char*)&speed, 4);
     // Serial.readBytes((char*)&coord, 4);
-    Serial.println("fdjslks");
     uint8_t buffer[6];
     Serial.readBytes(buffer, 6);
 
@@ -44,7 +43,7 @@ void loop(){
     // coordinate : 0 -> right
     // coordinate : 14 -> middle
 
-    if (num%100 == 0){
+    if (num%1 == 0){
       Serial.print("speed: ");
       Serial.println(left);
       Serial.println(right);
@@ -70,7 +69,7 @@ void loop(){
       analogWrite(motorDirection2, LOW);
     }
   } else {
-    Serial.println("dsfds");
+    // Serial.println("dsfds");
     val = potentiometer_Read(analogPin);
 
     if(val<coord){

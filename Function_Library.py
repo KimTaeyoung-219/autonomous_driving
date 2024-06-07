@@ -393,8 +393,7 @@ class libCAMERA(object):
         self.upperX = upperX
         return
 
-    def resize_image(self, pre_image):
-        new_shape = (1080, 2920, 3)
+    def resize_image(self, pre_image, new_shape=(1080, 2920, 3)):
         self.X_length = 2920
         image = np.zeros(new_shape, dtype=np.uint8)
         start_index = (new_shape[1] - pre_image.shape[1]) // 2
