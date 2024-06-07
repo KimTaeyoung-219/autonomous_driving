@@ -43,25 +43,27 @@ void loop(){
     // coordinate : 0 -> right
     // coordinate : 14 -> middle
 
-    if (num%1 == 0){
-      Serial.print("speed: ");
-      Serial.println(left);
-      Serial.println(right);
-      Serial.print("coordinate: ");
-      Serial.println(coord);
-    }
+    val = potentiometer_Read(analogPin);
+
+//     if (num%1 == 0){
+//       Serial.print("speed: ");
+//       Serial.println(left);
+//       // Serial.println(right);
+//       Serial.print("coordinate: ");
+//       Serial.println(coord);
+//       Serial.print("val: ");
+//       Serial.println(val);
+//     }
 
     motor_forward(motorA1, motorA2, right);
     motor_forward(motorA3, motorA4, left);
-
-    val = potentiometer_Read(analogPin);
     
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 150);
+      analogWrite(motorDirection2, 200);
     }
     else if(val>coord){
-      analogWrite(motorDirection1, 150);
+      analogWrite(motorDirection1, 200);
       analogWrite(motorDirection2, LOW);
     }
     else if(val==coord){
@@ -69,15 +71,17 @@ void loop(){
       analogWrite(motorDirection2, LOW);
     }
   } else {
-    // Serial.println("dsfds");
     val = potentiometer_Read(analogPin);
+//     Serial.print(val);
+//     Serial.print(" ");
+//     Serial.println(coord);
 
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 100);
+      analogWrite(motorDirection2, 150);
     }
     else if(val>coord){
-      analogWrite(motorDirection1, 100);
+      analogWrite(motorDirection1, 150);
       analogWrite(motorDirection2, LOW);
     }
     else if(val==coord){

@@ -9,7 +9,7 @@ img_num = 200
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10, max_speed = 130)
+    env = fl.libCAMERA(wait_value=10, max_speed = 200)
     time_check = False
     # arduino
     ser = fl.libARDUINO()
@@ -18,17 +18,17 @@ if __name__ == "__main__":
     # Camera Initial Setting
     ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
-    env.fetch_image_camera(channel=ch0)
+    # env.fetch_image_camera(channel=ch0)
 
     # Camera Reading..
     while True:
         # reading source
         if time_check:
             t1 = time.time()
-        # _, image = env.camera_read(ch0)
+        _, image = env.camera_read(ch0)
         # Camera using Thread
-        image = env.read_image_thread()
-        env.fetch_image_camera(channel=ch0)
+        # image = env.read_image_thread()
+        # env.fetch_image_camera(channel=ch0)
 
         # image = env.file_read("data/image"+str(img_num)+".png")
 

@@ -592,9 +592,9 @@ class libCAMERA(object):
         #     self.draw_car_line(img, result, x, ans[0], ans[1])
         return result, ans
 
-    def edge_detection(self, image):
+    def edge_detection(self, image, lines = [450, 400]):
         ans = []
-        X = [450, 400]
+        X = lines
         Y = self.center_point[1]
         for i in range(self.valid_X):
             for x in X:
@@ -651,8 +651,8 @@ class libCAMERA(object):
         if diff is not None:
             ans.append((self.center_point[0]+diff[0], self.center_point[1]+diff[1]))
             # self.draw_dot(image, self.center_point[0], self.center_point[1])
-            # self.draw_dot(image, self.center_point[0]+diff[0], self.center_point[1]+diff[1])
-            # self.draw_dot(self.result, self.center_point[0] + diff[0], self.center_point[1] + diff[1])
+            self.draw_dot(image, self.center_point[0]+diff[0], self.center_point[1]+diff[1])
+            self.draw_dot(self.result, self.center_point[0] + diff[0], self.center_point[1] + diff[1])
             # self.draw_dot(self.result, ans[0][0], ans[0][1])
             # self.draw_dot(self.result, before[0], self.left_lane)
             # self.draw_dot(self.result, before[0], self.right_lane)
@@ -667,7 +667,7 @@ class libCAMERA(object):
             x = ans[0][0]
             y = ans[0][1]
             angle = y - self.center_point[1]
-            tangent = angle / (self.center_point[0] - x)
+            tangent = angle / (self.center_point[0] - x + 40)
             inverse_tan = np.arctan(tangent)
             angle_in_degrees = inverse_tan * (180 / np.pi)
 
@@ -679,23 +679,26 @@ class libCAMERA(object):
             coord = -coord + 14
             if coord < 0:
                 coord = 0
-            elif coord > 28:
-                coord = 28
-            speed = self.max_speed
-            if coord <= 0:
-                coord = 0
-            elif coord > 0 and coord <= 4:
-                coord = 4
-            elif coord > 4 and coord <= 10:
-                coord = 10
-            elif coord > 10 and coord < 18:
-                coord = 14
-            elif coord >= 18 and coord < 24:
-                coord = 18
-            elif coord >= 24 and coord < 28:
-                coord = 24
             elif coord >= 28:
-                coord = 28
+                coord = 27
+            speed = self.max_speed
+            # if coord <= 0:
+            #     coord = 0
+            # elif coord > 0 and coord <= 4:
+            #     coord = 4
+            # elif coord > 4 and coord <= 10:
+            #     coord = 10
+            # elif coord > 10 and coord < 18:
+            #     coord = 14
+            # elif coord >= 18 and coord < 24:
+            #     coord = 18
+            # elif coord >= 24 and coord < 28:
+            #     coord = 24
+            # elif coord >= 28:
+            #     coord = 28
+            coord -= 1
+            if coord == -1:
+                coord = 0
             # print(f"speed: {speed}, angle: {angle}, tangent: {tangent}, angle: {angle_in_degrees}")
             # print(f"coordinate: {coord}")
             return speed, coord
@@ -715,10 +718,10 @@ class libCAMERA(object):
         # self.valid_Y = 480
         # self.valid_X = 640
         # self.center_point = (470, 320)
-        x_start = 260
-        x_end = 380
-        y_start = 440
-        y_end = 450
+        x_start = 600
+        x_end = 1320
+        y_start = 740
+        y_end = 750
         total = (x_end - x_start) * (y_end - y_start)
         num = 0
         for x in range(x_start, x_end):
@@ -727,8 +730,8 @@ class libCAMERA(object):
                 if image[y][x] == 255:
                     num += 1
         percentage = num / total
-        # print(f"precentage of crosswalk: {percentage}")
-        if percentage > 0.80:
+        print(f"precentage of crosswalk: {percentage}")
+        if percentage > 0.30:
             return True
         else:
             return False

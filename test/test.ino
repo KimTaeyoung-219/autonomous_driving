@@ -36,7 +36,7 @@ void loop(){
 
 
   // 28: max left, 14: middle, 0: max right
-  coord = 28;
+  coord = 13;
   val = potentiometer_Read(analogPin);
 
   if(val<coord){

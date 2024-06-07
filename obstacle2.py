@@ -23,7 +23,7 @@ def go_forward(env, image):
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10, max_speed=70)
+    env = fl.libCAMERA(wait_value=10, max_speed=80)
     time_check = False
     stage_check = True
     # change lane to ${change_lane}
@@ -68,6 +68,7 @@ if __name__ == "__main__":
         if time_check:
             t2 = time.time()
         result, ans, edges = go_forward(env, image)
+        crosswalk_image = env.convert_crosswalk_image(image)
 
         # custom the target point by obstacle detection, lidar data, crosswalk
         if time_check:
@@ -82,7 +83,7 @@ if __name__ == "__main__":
                     stage = 2
         elif stage == 2: # stay in line when the car move to the left side of obstacle1
             edges = env.find_car_lane(edges, ans)
-            if env.cur_lane == "right" or a != 0:
+            if env.cur_lane == "right" or a > 0:
                 ans = env.change_car_lane(ans, change_lane)
                 a -= 1
             else:
@@ -107,7 +108,6 @@ if __name__ == "__main__":
                 a = pred
                 stage = 5
         elif stage == 5:  # when find crosswalk_image, stop for 2 sec and move straight
-            crosswalk_image = env.convert_crosswalk_image(image)
             if env.find_crosswalk(crosswalk_image):
                 env.send_signal_to_arduino(comm, 0, 14)
                 time.sleep(2)
@@ -134,7 +134,7 @@ if __name__ == "__main__":
         # print image of final results
         if time_check:
             t6 = time.time()
-        env.image_show(result, edges)
+        env.image_show(result, edges, crosswalk_image)
         # env.image_show(image, edges)
 
         if time_check:
