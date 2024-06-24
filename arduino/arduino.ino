@@ -78,10 +78,10 @@ void loop(){
 
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 150);
+      analogWrite(motorDirection2, 200);
     }
     else if(val>coord){
-      analogWrite(motorDirection1, 150);
+      analogWrite(motorDirection1, 200);
       analogWrite(motorDirection2, LOW);
     }
     else if(val==coord){

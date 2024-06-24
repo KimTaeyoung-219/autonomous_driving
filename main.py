@@ -19,6 +19,7 @@ if __name__ == "__main__":
     ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
+    input("start!")
 
     # Camera Reading..
     while True:
@@ -61,7 +62,7 @@ if __name__ == "__main__":
         # print image of final results
         if time_check:
             t7 = time.time()
-        env.image_show(resize_image, result, edges)
+        env.image_show(resize_image, result, edges, valid_image)
         # env.image_show(image)
 
         if time_check:

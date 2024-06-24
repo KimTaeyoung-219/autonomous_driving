@@ -233,6 +233,7 @@ class libCAMERA(object):
         self.left_lane = None
         self.right_lane = None
         self.cur_lane = "right"
+        self.stage="NONE"
 
     def wait_key(self):
         key = cv2.waitKey(self.wait_value) & 0xFF
@@ -434,7 +435,7 @@ class libCAMERA(object):
         return self.valid_image
 
     def convert_image_to_1d(self, image):
-        self.edges = cv2.Canny(image, 200, 300)
+        self.edges = cv2.Canny(image, 60, 300)
         return self.edges
 
     def convert_crosswalk_image(self, image):
@@ -667,7 +668,7 @@ class libCAMERA(object):
             x = ans[0][0]
             y = ans[0][1]
             angle = y - self.center_point[1]
-            tangent = angle / (self.center_point[0] - x + 40)
+            tangent = angle / (self.center_point[0] - x + 130)
             inverse_tan = np.arctan(tangent)
             angle_in_degrees = inverse_tan * (180 / np.pi)
 
@@ -707,6 +708,10 @@ class libCAMERA(object):
     def send_signal_to_arduino(self, comm, speed, angle):
         if speed is None:
             return
+        if self.stage == "RIGHT":
+            angle = 0
+        if self.stage == "LEFT":
+            angle = 27
         # print(f"send arduino: {speed}, {angle}")
 
         data = struct.pack('<HHH', speed, speed, angle)

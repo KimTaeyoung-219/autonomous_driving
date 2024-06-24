@@ -28,7 +28,7 @@ if __name__ == "__main__":
     stage_check = True
     # change lane to ${change_lane}
     change_lane = "left"
-    pred = 100
+    pred = 130
     a = pred
     stage = 1
     # arduino
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # LiDAR using Thread
     lidar.fetch_scanning()
 
-    # input("if start, press ENTER!!")
+    input("if start, press ENTER!!")
 
     # Camera Reading..
     print_stage("STAGE 1", stage_check)
@@ -78,6 +78,7 @@ if __name__ == "__main__":
                 lidar_data = lidar.read_scanning()
                 flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 1600, 2000)
                 if flag == True:
+                    env.stage="LEFT"
                     change_lane = "left"
                     print_stage("STAGE 2", stage_check)
                     stage = 2
@@ -87,6 +88,7 @@ if __name__ == "__main__":
                 ans = env.change_car_lane(ans, change_lane)
                 a -= 1
             else:
+                env.stage = "NONE"
                 print_stage("STAGE 3", stage_check)
                 a = pred
                 stage = 3
@@ -95,15 +97,17 @@ if __name__ == "__main__":
                 lidar_data = lidar.read_scanning()
                 flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 1600, 2000)
                 if flag == True:
+                    env.stage = "RIGHT"
                     change_lane = "right"
                     print_stage("STAGE 4", stage_check)
                     stage = 4
         elif stage == 4:  # change lane to right
             edges = env.find_car_lane(edges, ans)
-            if env.cur_lane == "left" or a != 0:
+            if env.cur_lane == "left" or a > 0:
                 ans = env.change_car_lane(ans, change_lane)
                 a -= 1
             else:
+                env.stage="NONE"
                 print_stage("STAGE 5", stage_check)
                 a = pred
                 stage = 5
