@@ -2,36 +2,38 @@ import Function_Library as fl
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
-arduino_port = "/dev/cu.usbmodem1201"
+arduino_port = "/dev/cu.usbmodem1301"
 lidar_port = "/dev/cu.usbserial-0001"
-img_num = 200
+img_num = 100
+save_image = False
+save_num = 40000
 
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10, max_speed = 200)
+    env = fl.libCAMERA(wait_value = 0, max_speed = 250)
     time_check = False
     # arduino
-    ser = fl.libARDUINO()
-    comm = ser.init(arduino_port, 9600)
+    # ser = fl.libARDUINO()
+    # comm = ser.init(arduino_port, 9600)
 
     # Camera Initial Setting
-    ch0, ch1 = env.initial_setting(capnum=1)
+    # ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
-    input("start!")
+    # input("start!")
 
     # Camera Reading..
     while True:
         # reading source
         if time_check:
             t1 = time.time()
-        _, image = env.camera_read(ch0)
+        # _, image = env.camera_read(ch0)
         # Camera using Thread
         # image = env.read_image_thread()
         # env.fetch_image_camera(channel=ch0)
 
-        # image = env.file_read("data/image"+str(img_num)+".png")
+        image = env.file_read("output/image"+str(img_num)+".png")
 
         # extracting valid region from image
         if time_check:
@@ -57,7 +59,7 @@ if __name__ == "__main__":
         # send data to arduino
         if time_check:
             t6 = time.time()
-        env.send_signal_to_arduino(comm, speed, angle)
+        # env.send_signal_to_arduino(comm, speed, angle)
 
         # print image of final results
         if time_check:
@@ -74,6 +76,10 @@ if __name__ == "__main__":
             print(f"get speed, angle: {t6-t5}")
             print(f"send to arduino: {t8-t6}")
             print(f"total time: {t8-t1}")
+
+        if save_image:
+            env.save_file(image, "output/image" + str(save_num))
+            save_num += 1
 
         # Process Termination (If you input the 'q', camera scanning is ended.)
         key = env.wait_key()

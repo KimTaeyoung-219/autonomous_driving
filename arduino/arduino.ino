@@ -2,8 +2,8 @@
 
 int motorA1=2;
 int motorA2=3;
-int motorA3=5;
-int motorA4=4;
+int motorA3=4;
+int motorA4=5;
 
 int motorDirection1=8;
 int motorDirection2=9;
@@ -55,8 +55,13 @@ void loop(){
 //       Serial.println(val);
 //     }
 
-    motor_forward(motorA1, motorA2, right);
-    motor_forward(motorA3, motorA4, left);
+    if (left > 500) {
+      motor_forward(motorA2, motorA1, 70);
+      motor_forward(motorA4, motorA3, 70);
+    } else {
+      motor_forward(motorA1, motorA2, right);
+      motor_forward(motorA3, motorA4, left);
+    }
     
     if(val<coord){
       analogWrite(motorDirection1, LOW);
