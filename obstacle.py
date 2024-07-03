@@ -6,6 +6,7 @@ arduino_port = "/dev/cu.usbmodem1201"
 lidar_port = "/dev/cu.usbserial-0001"
 img_num = 0
 
+
 def print_stage(stage, flag):
     if flag is False:
         return
@@ -13,12 +14,14 @@ def print_stage(stage, flag):
     print(f"------{stage}------")
     print(f"-------------------")
 
+
 def go_forward(env, image):
     resize_image = env.resize_image(image)
     valid_image = env.extract_valid_image(resize_image)
     edges = env.convert_image_to_1d(valid_image)
     result, ans = env.edge_detection(edges)
     return result, ans, edges
+
 
 if __name__ == "__main__":
     # Exercise Environment Setting
@@ -78,7 +81,7 @@ if __name__ == "__main__":
             else:
                 print_stage("STAGE 2", stage_check)
                 stage = 3
-        elif stage == 2: # stay in line when the car move to the left side of obstacle1
+        elif stage == 2:  # stay in line when the car move to the left side of obstacle1
             if lidar.check_scanning() is True:
                 print("lll")
                 lidar_data = lidar.read_scanning()
@@ -134,11 +137,11 @@ if __name__ == "__main__":
         # env.image_show(image, edges)
 
         if time_check:
-            print(f"total time: {t6-t1}")
-            print(f"data read: {t2-t1}")
-            print(f"find target point: {t3-t2}")
-            print(f"modify target point: {t4-t3}")
-            print(f"send to arduino: {t6-t4}\n")
+            print(f"total time: {t6 - t1}")
+            print(f"data read: {t2 - t1}")
+            print(f"find target point: {t3 - t2}")
+            print(f"modify target point: {t4 - t3}")
+            print(f"send to arduino: {t6 - t4}\n")
 
         # Process Termination (If you input the 'q', camera scanning is ended.)
         key = env.wait_key()
@@ -160,5 +163,3 @@ if __name__ == "__main__":
             env.save_file(image, "data/image")
 
         # env.save_file(frame0, "data/image")
-
-

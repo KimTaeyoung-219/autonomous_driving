@@ -2,9 +2,11 @@ import Function_Library as fl
 import time
 
 # window: "COM5", mac: "/dev/cu.xxxxx"
-arduino_port = "/dev/cu.usbmodem1201"
+arduino_port = "/dev/cu.usbmodem1301"
 lidar_port = "/dev/cu.usbserial-0001"
 img_num = 200
+save_image = False
+save_num = 0
 
 if __name__ == "__main__":
     # Exercise Environment Setting
@@ -18,18 +20,18 @@ if __name__ == "__main__":
     # Camera Initial Setting
     ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
-    # env.fetch_image_camera(channel=ch0)
-    input("start!")
+    env.fetch_image_camera(channel=ch0)
+    # input("start!")
 
     # Camera Reading..
     while True:
         # reading source
         if time_check:
             t1 = time.time()
-        _, image = env.camera_read(ch0)
+        # _, image = env.camera_read(ch0)
         # Camera using Thread
-        # image = env.read_image_thread()
-        # env.fetch_image_camera(channel=ch0)
+        image = env.read_image_thread()
+        env.fetch_image_camera(channel=ch0)
 
         # image = env.file_read("data/image"+str(img_num)+".png")
 
@@ -74,6 +76,10 @@ if __name__ == "__main__":
             print(f"get speed, angle: {t6-t5}")
             print(f"send to arduino: {t8-t6}")
             print(f"total time: {t8-t1}")
+
+        if save_image:
+            env.save_file(image, f"output/image_{save_num}")
+            save_num += 1
 
         # Process Termination (If you input the 'q', camera scanning is ended.)
         key = env.wait_key()

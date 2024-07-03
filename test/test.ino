@@ -1,7 +1,7 @@
 #include <Car_Library.h>
 
-int motorA1=2;
-int motorA2=3;
+int motorA1=3;
+int motorA2=2;
 int motorA3=5;
 int motorA4=4;
 
@@ -28,15 +28,15 @@ void setup(){
 
 void loop(){
   num += 1;
-  int speed = 0;
+  int speed = 250;
   // motor_forward(motorA1, motorA2, speed);
   // motor_forward(motorA3, motorA4, speed);
   motor_forward(motorA2, motorA1, speed);
   motor_forward(motorA4, motorA3, speed);
 
 
-  // 28: max left, 14: middle, 0: max right
-  coord = 0;
+  // 168: max left, 140: middle, 112: max right
+  coord = 140;
   val = potentiometer_Read(analogPin);
 
   if(val<coord){
@@ -48,11 +48,11 @@ void loop(){
     analogWrite(motorDirection2, LOW);
   }
   else if(val==coord){
-    analogWrite(motorDirection1, 100);
-    analogWrite(motorDirection2, 100);
+    analogWrite(motorDirection1, LOW);
+    analogWrite(motorDirection2, LOW);
   }
 
-  if(num%10000 == 0){
+  if(num%1000 == 0){
     Serial.print("val: ");
     Serial.println(val);
   }

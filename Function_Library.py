@@ -225,7 +225,7 @@ class libCAMERA(object):
         self.max_speed = max_speed
         self.max_angle = 45
         self.max_voltage = 16
-        self.max_lane_width = 25
+        self.max_lane_width = 40
         self.min_lane_width = 10
         self.t = None
         self.direction = None
@@ -560,6 +560,9 @@ class libCAMERA(object):
                         #     img[x][y3] = 155
                         #     result[x][y3]=155
                         return result, ans
+                if self.count_upper(img, x, y) > 40:
+                    ans = (y, y - 14)
+                    return result, ans
         # if ans is not None:
         #     draw_car_line(img, result, x, ans[0], ans[1])
         return result, ans
@@ -589,6 +592,9 @@ class libCAMERA(object):
                         #     img[x][y3] = 155
                         #     result[x][y3]=155
                         return result, ans
+                if self.count_upper(img, x, y) > 40:
+                    ans = (y, y + 14)
+                    return result, ans
         # if ans is not None:
         #     self.draw_car_line(img, result, x, ans[0], ans[1])
         return result, ans
@@ -615,7 +621,7 @@ class libCAMERA(object):
                 if (left is not None) and (right is not None):
                     width = int(right[0]-left[0])
                     # width between two car line should be in range 150~250
-                    if width > 350 or width < 150:
+                    if width > 250 or width < 50:
                         continue
                     # self.left_lane = int((left[0]+left[1])/2)
                     # self.right_lane = int((right[0]+right[1])/2)
@@ -672,31 +678,18 @@ class libCAMERA(object):
             inverse_tan = np.arctan(tangent)
             angle_in_degrees = inverse_tan * (180 / np.pi)
 
-            # 1.42 = 20 / 14 = (max angle) / (max voltage)
+            # 1.42 = 20 / 28 = (max angle) / (max voltage)
             # voltage: 28 -> max left, 14 -> middle, 0 -> max right
-            coord = angle_in_degrees / 1.42
+            # 168: max left, 140: middle, 112: max right
+            coord = angle_in_degrees / 0.357
             coord = int(coord)
             # print(f"coord: {coord}")
-            coord = -coord + 14
-            if coord < 0:
-                coord = 0
-            elif coord >= 28:
-                coord = 27
+            coord = -coord + 140
+            if coord < 112:
+                coord = 122
+            elif coord >= 168:
+                coord = 168
             speed = self.max_speed
-            # if coord <= 0:
-            #     coord = 0
-            # elif coord > 0 and coord <= 4:
-            #     coord = 4
-            # elif coord > 4 and coord <= 10:
-            #     coord = 10
-            # elif coord > 10 and coord < 18:
-            #     coord = 14
-            # elif coord >= 18 and coord < 24:
-            #     coord = 18
-            # elif coord >= 24 and coord < 28:
-            #     coord = 24
-            # elif coord >= 28:
-            #     coord = 28
             coord -= 1
             if coord == -1:
                 coord = 0
@@ -708,11 +701,7 @@ class libCAMERA(object):
     def send_signal_to_arduino(self, comm, speed, angle):
         if speed is None:
             return
-        if self.stage == "RIGHT":
-            angle = 0
-        if self.stage == "LEFT":
-            angle = 27
-        # print(f"send arduino: {speed}, {angle}")
+        print(f"send arduino: {speed}, {angle}")
 
         data = struct.pack('<HHH', speed, speed, angle)
         comm.write(data)
@@ -787,6 +776,80 @@ class libCAMERA(object):
             # self.draw_dot(self.result, ans[0][0], ans[0][1])
             return ans
         return ans
+
+    def hsv_conversion(self, img):
+        return cv2.cvtColor(img.copy(), cv2.COLOR_BGR2HSV)
+
+    def gray_conversion(self, img):
+        return cv2.cvtColor(img.copy(), cv2.COLOR_BGR2GRAY)
+
+    def color_filtering(self, img, roi=None, print_enable=False):
+        self.row, self.col, self.dim = img.shape
+
+        hsv_img = self.hsv_conversion(img)
+        h, s, v = cv2.split(hsv_img)
+
+        s_cond = s > SATURATION
+        if roi is RED:
+            h_cond = (h < HUE_THRESHOLD[roi][0]) | (h > HUE_THRESHOLD[roi][1])
+        else:
+            h_cond = (h > HUE_THRESHOLD[roi][0]) & (h < HUE_THRESHOLD[roi][1])
+
+        v[~h_cond], v[~s_cond] = 0, 0
+        hsv_image = cv2.merge([h, s, v])
+        result = cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
+
+        if print_enable:
+            self.image_show(result)
+
+        return result
+
+    def hough_transform(self, img, rho=None, theta=None, threshold=None, mll=None, mlg=None, mode="lineP"):
+        if mode == "line":
+            return cv2.HoughLines(img.copy(), rho, theta, threshold)
+        elif mode == "lineP":
+            return cv2.HoughLinesP(img.copy(), rho, theta, threshold, lines=np.array([]),
+                                   minLineLength=mll, maxLineGap=mlg)
+        elif mode == "circle":
+            return cv2.HoughCircles(img.copy(), cv2.HOUGH_GRADIENT, dp=1, minDist=80,
+                                    param1=200, param2=10, minRadius=40, maxRadius=100)
+
+    def traffic_light_detection(self, img, sample=0, mode="circle", print_enable=False):
+        result = None
+        replica = img.copy()
+
+        for color in (RED, YELLOW, GREEN):
+            extract = self.color_filtering(img, roi=color, print_enable=True)
+            gray = self.gray_conversion(extract)
+            circles = self.hough_transform(gray, mode=mode)
+            if circles is not None:
+                for circle in circles[0]:
+                    center, count = (int(circle[0]), int(circle[1])), 0
+
+                    hsv_img = self.hsv_conversion(img)
+                    h, s, v = cv2.split(hsv_img)
+
+                    # Searching the surrounding pixels
+                    for res in range(sample):
+                        x, y = int(center[1] - sample / 2), int(center[0] - sample / 2)
+                        s_cond = s[x][y] > SATURATION
+                        if color is RED:
+                            h_cond = (h[x][y] < HUE_THRESHOLD[color][0]) | (h[x][y] > HUE_THRESHOLD[color][1])
+                            count += 1 if h_cond and s_cond else count
+                        else:
+                            h_cond = (h[x][y] > HUE_THRESHOLD[color][0]) & (h[x][y] < HUE_THRESHOLD[color][1])
+                            count += 1 if h_cond and s_cond else count
+
+                    if count > sample / 2:
+                        result = COLOR[color]
+                        cv2.circle(replica, center, int(circle[2]), (0, 0, 255), 2)
+
+        if print_enable:
+            if result is not None:
+                print("Traffic Light: ", result)
+            self.image_show(replica)
+
+        return result
 
 
 
