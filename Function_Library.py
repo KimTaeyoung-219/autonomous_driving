@@ -226,10 +226,11 @@ class libCAMERA(object):
         self.max_angle = 45
         self.max_voltage = 16
         self.max_lane_width = 40
-        self.min_lane_width = 30
+        self.min_lane_width = 15
         self.lane_width = 330
-        self.min_lane_length = 60
-        self.check_count_line = True
+        self.min_lane_length = 50
+        self.check_count_line = False
+        self.angle = 0
         self.t = None
         self.direction = None
         self.queue = queue.Queue()
@@ -237,6 +238,7 @@ class libCAMERA(object):
         self.right_lane = None
         self.cur_lane = "right"
         self.stage="NONE"
+        self.green_pixel = 0
 
     def wait_key(self):
         key = cv2.waitKey(self.wait_value) & 0xFF
@@ -404,7 +406,7 @@ class libCAMERA(object):
         end_index = start_index + pre_image.shape[1]
 
         image[:, start_index:end_index, :] = pre_image
-        self.set_valid_image_parameter(belowX=50, upperX=980)
+        self.set_valid_image_parameter(belowX=100, upperX=880)
         return image
 
     def extract_valid_image(self, image):
@@ -438,7 +440,7 @@ class libCAMERA(object):
         return self.valid_image
 
     def convert_image_to_1d(self, image):
-        self.edges = cv2.Canny(image, 60, 300)
+        self.edges = cv2.Canny(image, 40, 300)
         return self.edges
 
     def convert_crosswalk_image(self, image):
@@ -575,7 +577,7 @@ class libCAMERA(object):
     def get_line_Canny_with_X_right(self, img, result, x, Y):
         ans = None
         flag = False
-        for y in range(Y, 599):
+        for y in range(Y, self.valid_X - self.max_lane_width):
             pre = []
             if flag is True:
                 break
@@ -638,33 +640,55 @@ class libCAMERA(object):
                     self.draw_dot(image, x - (inc * jump), Y)
                     self.lane_width = abs(self.left_lane - self.right_lane)
                     return self.result, ans
-                if diff is None:
-                    if self.cur_lane == "left" and left is not None:
-                        diff = self.find_inclination(image, self.result, x - (inc * jump), left[0])
-                        if diff is not None:
-                            coord = (diff[0], diff[1] + (self.lane_width // 2))
-                            before = (x - (inc * jump), left[0])
-                            self.draw_dot(image, before[0], before[1])
-                            self.draw_dot(image, diff[0], diff[1])
-                            self.left_lane = left[0]
-                            self.right_lane = 2 * self.center_point[1] - left[0]
-                            diff = (diff[0] - before[0], diff[1] - before[1])
-                    elif self.cur_lane == "right" and right is not None:
-                        diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
-                        if diff is not None:
-                            coord = (diff[0], diff[1] - (self.lane_width // 2))
-                            before = (x - (inc * jump), right[0])
-                            self.draw_dot(image, before[0], before[1])
-                            self.draw_dot(image, diff[0], diff[1])
-                            self.left_lane = 2 * self.center_point[1]-before[1]
-                            self.right_lane = before[1]
-                            diff = (diff[0] - before[0], diff[1] - before[1])
+                if coord is None:
+                    if self.cur_lane == "left":
+                        if left is not None:
+                            diff = self.find_inclination(image, self.result, x - (inc * jump), left[0])
+                            if diff is not None:
+                                coord = (diff[0], diff[1] + (self.lane_width // 2))
+                                before = (x - (inc * jump), left[0])
+                                self.draw_dot(image, before[0], before[1])
+                                self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = left[0]
+                                self.right_lane = 2 * self.center_point[1] - left[0]
+                                diff = (diff[0] - before[0], diff[1] - before[1])
+                        elif right is not None:
+                            diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
+                            if diff is not None:
+                                coord = (diff[0], diff[1] - (self.lane_width // 2))
+                                before = (x - (inc * jump), right[0])
+                                self.draw_dot(image, before[0], before[1])
+                                self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = 2 * self.center_point[1] - before[1]
+                                self.right_lane = before[1]
+                                diff = (diff[0] - before[0], diff[1] - before[1])
+                    elif self.cur_lane == "right":
+                        if right is not None:
+                            diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
+                            if diff is not None:
+                                coord = (diff[0], diff[1] - (self.lane_width // 2))
+                                before = (x - (inc * jump), right[0])
+                                self.draw_dot(image, before[0], before[1])
+                                self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = 2 * self.center_point[1]-before[1]
+                                self.right_lane = before[1]
+                                diff = (diff[0] - before[0], diff[1] - before[1])
+                        elif left is not None:
+                            diff = self.find_inclination(image, self.result, x - (inc * jump), left[0])
+                            if diff is not None:
+                                coord = (diff[0], diff[1] + (self.lane_width // 2))
+                                before = (x - (inc * jump), left[0])
+                                self.draw_dot(image, before[0], before[1])
+                                self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = left[0]
+                                self.right_lane = 2 * self.center_point[1] - left[0]
+                                diff = (diff[0] - before[0], diff[1] - before[1])
             if flag is True:
                 break
         # if vision cannot find both car lane and cannot specify the target point
         # calculate the target point by inclination of single car lane
         if coord is not None:
-            print("setting coordinate with DIFF NONE")
+            # print("setting coordinate with DIFF NONE")
             # print(f"diff: {diff}")
             # print(f"lane_width: {self.lane_width}")
             # ans.append((self.center_point[0]+diff[0], self.center_point[1]+diff[1]))
@@ -688,14 +712,16 @@ class libCAMERA(object):
             x = ans[0][0]
             y = ans[0][1]
             angle = y - self.center_point[1]
-            tangent = angle / (self.center_point[0] - x + 350)
+            tangent = angle / (self.center_point[0] - x + 180)
             inverse_tan = np.arctan(tangent)
             angle_in_degrees = inverse_tan * (180 / np.pi)
 
+            self.angle = angle_in_degrees
             # 1.42 = 20 / 28 = (max angle) / (max voltage)
             # voltage: 28 -> max left, 14 -> middle, 0 -> max right
             # 168: max left, 140: middle, 112: max right
-            coord = angle_in_degrees / 0.357
+            # coord = angle_in_degrees / 0.357
+            coord = angle_in_degrees / 0.741
             coord = int(coord)
             # print(f"coord: {coord}")
             coord = -coord + 140
@@ -712,10 +738,23 @@ class libCAMERA(object):
             return speed, coord
         return None, None
 
-    def send_signal_to_arduino(self, comm, speed, angle):
+    def send_signal_to_arduino(self, comm, speed, angle, change_speed = False):
         if speed is None:
             return
         # print(f"send arduino: {speed}, {angle}")
+        if change_speed:
+            speed2 = speed / (1 + (np.tan(abs(np.radians(abs(self.angle)))) / 2))
+            speed2 = int(speed2)
+            if angle > 0:
+                left = speed
+                right = speed2
+            else:
+                left = speed2
+                right = speed
+            print(f"left: {left}, right: {right}")
+            data = struct.pack('<HHH', left, right, angle)
+            comm.write(data)
+            return
 
         data = struct.pack('<HHH', speed, speed, angle)
         comm.write(data)
@@ -734,20 +773,20 @@ class libCAMERA(object):
         # self.valid_Y = 480
         # self.valid_X = 640
         # self.center_point = (470, 320)
-        x_start = 600
-        x_end = 1320
-        y_start = 740
+        x_start = 300
+        x_end = 1620
+        y_start = 720
         y_end = 750
         total = (x_end - x_start) * (y_end - y_start)
         num = 0
         for x in range(x_start, x_end):
             for y in range(y_start, y_end):
-                # self.result[y][x]=255
+                image[y][x]=255
                 if image[y][x] == 255:
                     num += 1
         percentage = num / total
         print(f"precentage of crosswalk: {percentage}")
-        if percentage > 0.30:
+        if percentage > 0.80:
             return True
         else:
             return False
@@ -799,6 +838,62 @@ class libCAMERA(object):
             return ans
         return ans
 
+    def find_green_traffic_light(self, image, print_enable=True):
+        # Convert the image to HSV color space
+        hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # Define the range of green color in HSV
+        lower_green = np.array([35, 100, 100])
+        upper_green = np.array([85, 255, 255])
+
+        # Create a mask for green color
+        green_mask = cv2.inRange(hsv_img, lower_green, upper_green)
+        # Count the number of green pixels
+        green_pixel_count = cv2.countNonZero(green_mask)
+
+        # Apply the mask to the original image
+        green_result = cv2.bitwise_and(image, image, mask=green_mask)
+
+        if print_enable:
+            print(f"green_pixel_count: {green_pixel_count}")
+        #     # Display the original image and the result
+        #     cv2.imshow('Original Image', image)
+        #     cv2.imshow('Green Color Detection', green_result)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+        return green_pixel_count
+
+    def find_red_traffic_light(self, img, print_enable=False):
+        # Convert the image to HSV color space
+        hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        # Define the range of red color in HSV
+        lower_red1 = np.array([0, 100, 100])
+        upper_red1 = np.array([10, 255, 255])
+        lower_red2 = np.array([160, 100, 100])
+        upper_red2 = np.array([180, 255, 255])
+
+        # Create masks for red color
+        mask1 = cv2.inRange(hsv_img, lower_red1, upper_red1)
+        mask2 = cv2.inRange(hsv_img, lower_red2, upper_red2)
+        red_mask = cv2.bitwise_or(mask1, mask2)
+
+        red_pixel_count = cv2.countNonZero(red_mask)
+
+        # Apply the mask to the original image
+        red_result = cv2.bitwise_and(img, img, mask=red_mask)
+
+        if print_enable:
+            print(f"red_pixel_count: {red_pixel_count}")
+            # Display the original image and the result
+            # cv2.imshow('Original Image', img)
+            # cv2.imshow('Red Color Detection', red_result)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+        return red_pixel_count
+
     def hsv_conversion(self, img):
         return cv2.cvtColor(img.copy(), cv2.COLOR_BGR2HSV)
 
@@ -838,7 +933,6 @@ class libCAMERA(object):
 
     def traffic_light_detection(self, img, sample=0, mode="circle", print_enable=False):
         result = None
-        replica = img.copy()
 
         for color in (RED, YELLOW, GREEN):
             extract = self.color_filtering(img, roi=color, print_enable=True)
@@ -847,7 +941,7 @@ class libCAMERA(object):
             if circles is not None:
                 for circle in circles[0]:
                     center, count = (int(circle[0]), int(circle[1])), 0
-
+                    cv2.circle(img, center, int(circle[2]), (0, 0, 255), 2)
                     hsv_img = self.hsv_conversion(img)
                     h, s, v = cv2.split(hsv_img)
 
@@ -864,12 +958,12 @@ class libCAMERA(object):
 
                     if count > sample / 2:
                         result = COLOR[color]
-                        cv2.circle(replica, center, int(circle[2]), (0, 0, 255), 2)
+                        cv2.circle(img, center, int(circle[2]), (0, 0, 255), 2)
 
         if print_enable:
             # if result is not None:
             print("Traffic Light: ", result)
-            # self.image_show(replica)
+            # self.image_show(img)
 
         return result
 

@@ -12,7 +12,7 @@ video_file = "data/testVideo.mp4"
 
 env = fl.libCAMERA(wait_value=0)
 img_num = 200
-ser = fl.libARDUINO()
+# ser = fl.libARDUINO()
 # comm = ser.init(arduino_port, 9600)
 # ch0, ch1 = env.initial_setting(capnum=1)
 
@@ -29,23 +29,35 @@ t1 = time.time()
 t = 0.08
 print(f"main function starts")
 for i in range(EPOCH):
+    frameNum += 1
+    if frameNum % 2 == 1:
+        image = env.file_read("output/crosswalk3.jpg")
+    else:
+        image = env.file_read("output/crosswalk4.jpg")
+    # env.traffic_light_detection(image, print_enable=True)
+    # env.image_show(image)
+
+    # Find red color in the image
+    # red_detected_image = find_red_color(image, print_enable=True)
+    green_detected_image = env.find_red_traffic_light(image, print_enable=True)
+
     # image = env.read_image_thread()
     # env.fetch_image_video(cap)
     # env.send_signal_to_arduino(comm, 0, 14)
     # time.sleep(100)
 
-    image = env.file_read("data/image"+str(img_num)+".png")
-    resize_image = env.resize_image(image)
-    valid_image = env.extract_valid_image(resize_image)
-
-    edges = env.convert_image_to_1d(valid_image)
-    crosswalk_image = env.convert_crosswalk_image(image)
-
-    flag = env.find_crosswalk(crosswalk_image)
-    print(crosswalk_image.shape)
-    print(flag)
-
-    env.image_show(image, edges, crosswalk_image)
+    # image = env.file_read("data/image"+str(img_num)+".png")
+    # resize_image = env.resize_image(image)
+    # valid_image = env.extract_valid_image(resize_image)
+    #
+    # edges = env.convert_image_to_1d(valid_image)
+    # crosswalk_image = env.convert_crosswalk_image(image)
+    #
+    # flag = env.find_crosswalk(crosswalk_image)
+    # print(crosswalk_image.shape)
+    # print(flag)
+    #
+    # env.image_show(image, edges, crosswalk_image)
 
     # for i in range(0, 28, 1):
     #     coord = i
@@ -136,7 +148,7 @@ for i in range(EPOCH):
     # print(f"sending coord: {coord}")
     # env.send_signal_to_arduino(comm, 0, coord)
 
-    frameNum += 1
+    # frameNum += 1
     # time.sleep(0.05)
 
     # n 누르면 다음 이미지
@@ -150,13 +162,13 @@ for i in range(EPOCH):
         if (img_num == 50):
             print("Final image!!")
         else:
-            img_num += 1
+            # img_num += 1
             print("image number: " + str(img_num))
     elif key == "prev":
         if (img_num == 0):
             print("First image!!")
         else:
-            img_num -= 1
+            # img_num -= 1
             print("image number: " + str(img_num))
     elif key == "save":
         env.save_file(image, "data/image")

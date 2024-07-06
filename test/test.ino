@@ -28,7 +28,7 @@ void setup(){
 
 void loop(){
   num += 1;
-  int speed = 250;
+  int speed = 0;
   // motor_forward(motorA1, motorA2, speed);
   // motor_forward(motorA3, motorA4, speed);
   motor_forward(motorA2, motorA1, speed);
@@ -36,7 +36,7 @@ void loop(){
 
 
   // 168: max left, 140: middle, 112: max right
-  coord = 140;
+  coord = 168;
   val = potentiometer_Read(analogPin);
 
   if(val<coord){
