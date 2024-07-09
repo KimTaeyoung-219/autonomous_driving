@@ -30,29 +30,34 @@ if __name__ == "__main__":
     time_check = False
     # arduino
     ser = fl.libARDUINO()
-    # ch0, ch1 = env.initial_setting(capnum=1)
+    ch0, ch1 = env.initial_setting(capnum=1)
     comm = ser.init(arduino_port, 9600)
     lidar = fl.libLIDAR(lidar_port)
-    lidar.fetch_scanning()
-    env.send_signal_to_arduino(comm, 0, 140)
+    env.send_signal_to_arduino(comm, 0, 144)
 
     input("Start!!")
 
     # go straight
     t1 = time.time()
     print_stage("STAGE1", True)
-    env.send_signal_to_arduino(comm, 70, 140)
-
+    env.send_signal_to_arduino(comm, 70, 144)
+    lidar.fetch_scanning()
     while True:
         if lidar.check_scanning():
             lidar_data = lidar.read_scanning()
             print("LiDAR data received")
-            flag = lidar.getAngleDistanceRange(lidar_data, 280, 300, 100, 2000)
+            flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 800)
+            flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1000, 2000)
             if flag:
-                lidar.stop()
+                # lidar.stop()
                 print("found!!")
+                T = 3
                 break
-
+            if flag2:
+                # lidar.stop()
+                print("found2!!")
+                T = 10
+                break
     # stop
     print_stage("STAGE2", True)
     t2 = time.time()
@@ -74,7 +79,20 @@ if __name__ == "__main__":
     # stop
     print_stage("STAGE4", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 0, 140)
+    env.send_signal_to_arduino(comm, 0, 144)
+    while True:
+        t5 = time.time()
+        if t5 - t4 > 2:
+            break
+
+    t4 = time.time()
+    env.send_signal_to_arduino(comm, 1000, 144)
+    while True:
+        t5 = time.time()
+        if t5 - t4 > T:
+            break
+
+    env.send_signal_to_arduino(comm, 0, 144)
     while True:
         t5 = time.time()
         if t5 - t4 > 2:
@@ -94,7 +112,7 @@ if __name__ == "__main__":
         if angle < 112:
             angle = 112
             # env.send_signal_to_arduino(comm, speed, angle)
-        env.image_show(result, ans, edges)
+        env.image_show(result, edges)
         # if env.find_crosswalk(crosswalk_image):
         #     env.send_signal_to_arduino(comm, 0, 14)
         #     time.sleep(2)

@@ -14,7 +14,7 @@ env = fl.libCAMERA(wait_value=10)
 img_num = 250
 ser = fl.libARDUINO()
 comm = ser.init(arduino_port, 9600)
-ch0, ch1 = env.initial_setting(capnum=1)
+ch0, ch1 = env.initial_setting(capnum=2)
 
 lidar = fl.libLIDAR(lidar_port)
 
@@ -25,11 +25,13 @@ t1 = time.time()
 # cap = cv2.VideoCapture(video_file)
 # env.fetch_image_video(cap)
 lidar.fetch_scanning()
-env.send_signal_to_arduino(comm, 60, 140)
+env.send_signal_to_arduino(comm, 60, 144)
 
 t = 0.08
 print(f"main function starts")
 for i in range(EPOCH):
+    _, image, _, image2 = env.camera_read(ch0, ch1)
+    env.image_show(image, image2)
     # frameNum += 1
     # if frameNum % 2 == 1:
     #     image = env.file_read("output/crosswalk3.jpg")

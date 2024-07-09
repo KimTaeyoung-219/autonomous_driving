@@ -721,12 +721,12 @@ class libCAMERA(object):
             self.angle = angle_in_degrees
             # 1.42 = 20 / 28 = (max angle) / (max voltage)
             # voltage: 28 -> max left, 14 -> middle, 0 -> max right
-            # 168: max left, 140: middle, 112: max right
+            # 172: max left, 142: middle, 112: max right
             # coord = angle_in_degrees / 0.357
             coord = angle_in_degrees / 0.741
             coord = int(coord)
             # print(f"coord: {coord}")
-            coord = -coord + 140
+            coord = -coord + 144
             if coord < 112:
                 coord = 122
             elif coord >= 168:
