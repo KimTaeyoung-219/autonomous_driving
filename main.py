@@ -4,9 +4,9 @@ import time
 # window: "COM5", mac: "/dev/cu.xxxxx"
 arduino_port = "/dev/cu.usbmodem1301"
 lidar_port = "/dev/cu.usbserial-0001"
-img_num = 270
+img_num = 60000
 save_image = False
-save_num = 40000
+save_num = 60000
 
 if __name__ == "__main__":
     # Exercise Environment Setting
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # arduino
     ser = fl.libARDUINO()
     comm = ser.init(arduino_port, 9600)
-
+    #
     # Camera Initial Setting
     ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread

@@ -33,7 +33,7 @@ if __name__ == "__main__":
     stage_check = True
     # change lane to ${change_lane}
     change_8ane = "left"
-    pred = 35
+    pred = 30 # left 35 right 5
     a = pred
     stage = 1
     # arduino
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # Camera Initial Setting
     ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
-    env.fetch_image_camera(channel=ch0)
+    # env.fetch_image_camera(channel=ch0)
     # LiDAR using Thread
     lidar.fetch_scanning()
 
@@ -57,10 +57,13 @@ if __name__ == "__main__":
         # reading source
         if time_check:
             t1 = time.time()
-        # _, image = env.camera_read(ch0)
+        _, image = env.camera_read(ch0)
+        # _, image2 = env.camera_read(ch1)
         # Camera using Thread
-        image = env.read_image_thread()
-        env.fetch_image_camera(channel=ch0)
+        # image = env.read_image_thread()
+        # env.fetch_image_camera(channel=ch0)
+        # env.image_show(image, image2)
+        # env.wait_key()
 
         # LiDAR using Thread
         # env.fetch_image_camera(channel=ch0)
@@ -81,7 +84,7 @@ if __name__ == "__main__":
         if stage == 1:  # when starts, change lane to left immediately
             if lidar.check_scanning():
                 lidar_data = lidar.read_scanning()
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 1600, 2000)
+                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 1000, 2000)
                 if flag:
                     env.stage = "LEFT"
                     change_lane = "left"
@@ -89,8 +92,13 @@ if __name__ == "__main__":
                     stage = 2
         elif stage == 2:  # stay in line when the car move to the left side of obstacle1
             edges = env.find_car_lane(edges, ans)
-            if a > 0:
+            if a > 5:
                 ans = env.change_car_lane(ans, change_lane)
+                angle = 161
+                a -= 1
+            elif a > 0:
+                ans = env.change_car_lane(ans, change_lane)
+                angle = 119
                 a -= 1
             else:
                 env.stage = "NONE"
@@ -99,7 +107,7 @@ if __name__ == "__main__":
                 stage = 3
         elif stage == 3:  # when find obstacle2 in front, change lane to right
             if lidar.check_scanning():
-                print("dsklfjs")
+                print("First LiDAR data received")
                 lidar_data = lidar.read_scanning()
                 flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 1600, 2000)
                 if flag:
@@ -109,9 +117,14 @@ if __name__ == "__main__":
                     stage = 4
         elif stage == 4:  # change lane to right
             edges = env.find_car_lane(edges, ans)
-            print("dsjflk")
-            if a > 0:
+            print("Second LiDAR data received")
+            if a > 5:
                 ans = env.change_car_lane(ans, change_lane)
+                angle = 119
+                a -= 1
+            elif a > 0:
+                ans = env.change_car_lane(ans, change_lane)
+                angle = 161
                 a -= 1
             else:
                 env.stage = "NONE"
@@ -123,7 +136,7 @@ if __name__ == "__main__":
                 env.send_signal_to_arduino(comm, 0, 14)
                 stage = 6
                 print_stage("STAGE 6", stage_check)
-                gp = env.find_green_traffic_light(image)
+                gp = env.find_green_traffic_light(image2)
                 env.green_pixel = gp
                 env.max_speed = 0
                 # env.send_signal_to_arduino(comm, 60, 14)
@@ -132,12 +145,14 @@ if __name__ == "__main__":
                 # time.sleep(2)
                 # stage = 6
         elif stage == 6:
-            gp = env.find_green_traffic_light(image)
+            gp = env.find_green_traffic_light(image2)
             if (gp - env.green_pixel) > 7000:
                 env.send_signal_to_arduino(comm, 60, 14)
                 time.sleep(2)
                 env.max_speed = 100
                 stage = 7
+            else:
+                continue
 
         # clear lidar buffer when stage is not using lidar data
         if stage == 2 or stage == 4 or stage == 5 or stage == 6 or stage == 7:
@@ -148,11 +163,6 @@ if __name__ == "__main__":
         if time_check:
             t4 = time.time()
         speed, angle = env.get_speed_angle(ans)
-
-        if env.stage == "RIGHT":
-            angle = 119
-        if env.stage == "LEFT":
-            angle = 161
 
         # send data to arduino
         if time_check:

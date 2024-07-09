@@ -134,6 +134,7 @@ class libLIDAR(object):
 
     def read_scanning(self):
         data = self.q.get()
+        # print(f"queue data: {self.q.qsize()}")
         return data
 
     def fetch_scanning_threads(self, event):
@@ -207,6 +208,7 @@ class libLIDAR(object):
 class libCAMERA(object):
     def __init__(self, wait_value = 0, max_speed = 120):
         self.capnum = 0
+        self.capnum2 = 0
         self.wait_value = wait_value
         self.image_num = 200
         self.row, self.col, self.dim = (0, 0, 0)
@@ -440,7 +442,7 @@ class libCAMERA(object):
         return self.valid_image
 
     def convert_image_to_1d(self, image):
-        self.edges = cv2.Canny(image, 40, 300)
+        self.edges = cv2.Canny(image, 30, 300)
         return self.edges
 
     def convert_crosswalk_image(self, image):
@@ -773,23 +775,41 @@ class libCAMERA(object):
         # self.valid_Y = 480
         # self.valid_X = 640
         # self.center_point = (470, 320)
-        x_start = 300
-        x_end = 1620
-        y_start = 720
+        x_start = 700
+        x_end = 1220
+        y_start = 730
         y_end = 750
+        total = (x_end - x_start) * (y_end - y_start)
+        flag = False
+        num = 0
+        for x in range(x_start, x_end):
+            for y in range(y_start, y_end):
+                if image[y][x] == 255:
+                    num += 1
+                image[y][x] = 155
+        percentage = num / total
+        if percentage > 0.30:
+            flag = True
+        else:
+            return False
+        y_start = 430
+        y_end = 450
         total = (x_end - x_start) * (y_end - y_start)
         num = 0
         for x in range(x_start, x_end):
             for y in range(y_start, y_end):
-                image[y][x]=255
                 if image[y][x] == 255:
                     num += 1
-        percentage = num / total
-        print(f"precentage of crosswalk: {percentage}")
-        if percentage > 0.80:
-            return True
+                image[y][x] = 155
+        percentage2 = num / total
+        print(f"percentage of crosswalk: {percentage}, {percentage2}")
+        if percentage2 > 0.30:
+            print("CROSSWALK FOUND!!")
+            flag = True
         else:
             return False
+        return flag
+
 
     def find_obstacle(self):
         return False

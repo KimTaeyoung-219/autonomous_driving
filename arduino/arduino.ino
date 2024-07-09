@@ -11,7 +11,7 @@ int analogPin=A0;
 
 int val;
 int num=0;
-int coord;
+int coord = 140;
 int speed;
 int left, right;
 
@@ -65,10 +65,10 @@ void loop(){
     
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 200);
+      analogWrite(motorDirection2, 250);
     }
     else if(val>coord){
-      analogWrite(motorDirection1, 200);
+      analogWrite(motorDirection1, 250);
       analogWrite(motorDirection2, LOW);
     }
     else if(val==coord){
