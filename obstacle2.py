@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # change lane to ${change_lane}
     change_lane = "left"
     state = None
-    pred = 25 # left 35 right 5
+    pred = 15 # left 35 right 5
     a = pred
     stage = 1
     # arduino
@@ -95,17 +95,10 @@ if __name__ == "__main__":
                     stage = 2
         elif stage == 2:  # stay in line when the car move to the left side of obstacle1
             edges = env.find_car_lane(edges, ans)
-            if a > 7:
+            if a > 0 or env.cur_lane != change_lane:
                 ans = env.change_car_lane(ans, change_lane)
-                angle = 161
                 state = 161
                 print(f"Go left: {a}")
-                a -= 1
-            elif a > 0:
-                ans = env.change_car_lane(ans, change_lane)
-                angle = 119
-                state = 119
-                print(f"Go right: {a}")
                 a -= 1
             else:
                 env.stage = "NONE"
@@ -125,17 +118,10 @@ if __name__ == "__main__":
                     stage = 4
         elif stage == 4:  # change lane to right
             edges = env.find_car_lane(edges, ans)
-            if a > 7:
+            if a > 0 or env.cur_lane != change_lane:
                 ans = env.change_car_lane(ans, change_lane)
-                angle = 119
                 state = 119
                 print(f"Go right: {a}")
-                a -= 1
-            elif a > 0:
-                ans = env.change_car_lane(ans, change_lane)
-                angle = 161
-                state = 161
-                print(f"Go left: {a}")
                 a -= 1
             else:
                 env.stage = "NONE"
@@ -176,7 +162,7 @@ if __name__ == "__main__":
             t4 = time.time()
         speed, angle = env.get_speed_angle(ans)
 
-        if state is not None:
+        if state is not None and a > 0:
             angle = state
 
         # send data to arduino

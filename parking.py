@@ -46,15 +46,15 @@ if __name__ == "__main__":
         if lidar.check_scanning():
             lidar_data = lidar.read_scanning()
             print("LiDAR data received")
-            flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 800)
-            flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1000, 2000)
+            flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 1000)
+            flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1300, 2000)
             if flag:
-                # lidar.stop()
+                lidar.stop()
                 print("found!!")
                 T = 3
                 break
             if flag2:
-                # lidar.stop()
+                lidar.stop()
                 print("found2!!")
                 T = 10
                 break

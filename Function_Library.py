@@ -98,6 +98,7 @@ class libLIDAR(object):
         self.q = queue.Queue()
         self.t = None
         self.thread_event = None
+        self.getState()
 
     def init(self):
         info = self.lidar.get_info()
@@ -611,6 +612,8 @@ class libCAMERA(object):
     def edge_detection(self, image, lines = [450, 400]):
         ans = []
         X = lines
+        self.left_lane = None
+        self.right_lane = None
         Y = self.center_point[1]
         for i in range(self.valid_X):
             for x in X:
@@ -639,7 +642,7 @@ class libCAMERA(object):
                     Y = int((left[0] + right[0]) / 2)
                     ans.append((x - (inc * jump), Y))
                     self.draw_dot(self.result, x - (inc * jump), Y)
-                    self.draw_dot(image, x - (inc * jump), Y)
+                    # self.draw_dot(image, x - (inc * jump), Y)
                     self.lane_width = abs(self.left_lane - self.right_lane)
                     return self.result, ans
                 if coord is None:
@@ -649,48 +652,51 @@ class libCAMERA(object):
                             if diff is not None:
                                 coord = (diff[0], diff[1] + (self.lane_width // 2))
                                 before = (x - (inc * jump), left[0])
-                                self.draw_dot(image, before[0], before[1])
-                                self.draw_dot(image, diff[0], diff[1])
-                                self.left_lane = left[0]
-                                self.right_lane = 2 * self.center_point[1] - left[0]
-                                diff = (diff[0] - before[0], diff[1] - before[1])
+                                # self.draw_dot(image, before[0], before[1] + diff[1])
+                                # self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = diff[1]
+                                self.right_lane = 2 * coord[1] - diff[1]
+                                # diff = (diff[0] - before[0], diff[1] - before[1])
                         elif right is not None:
                             diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
                             if diff is not None:
                                 coord = (diff[0], diff[1] - (self.lane_width // 2))
-                                before = (x - (inc * jump), right[0])
-                                self.draw_dot(image, before[0], before[1])
-                                self.draw_dot(image, diff[0], diff[1])
-                                self.left_lane = 2 * self.center_point[1] - before[1]
-                                self.right_lane = before[1]
-                                diff = (diff[0] - before[0], diff[1] - before[1])
+                                before = (x - (inc * jump), right[0] + diff[1])
+                                # self.draw_dot(image, before[0], before[1])
+                                # self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = 2 * coord[1] - diff[1]
+                                self.right_lane = diff[1]
+                                # diff = (diff[0] - before[0], diff[1] - before[1])
                     elif self.cur_lane == "right":
                         if right is not None:
                             diff = self.find_inclination(image, self.result, x - (inc * jump), right[0])
                             if diff is not None:
                                 coord = (diff[0], diff[1] - (self.lane_width // 2))
-                                before = (x - (inc * jump), right[0])
-                                self.draw_dot(image, before[0], before[1])
-                                self.draw_dot(image, diff[0], diff[1])
-                                self.left_lane = 2 * self.center_point[1]-before[1]
-                                self.right_lane = before[1]
-                                diff = (diff[0] - before[0], diff[1] - before[1])
+                                before = (x - (inc * jump), right[0] + diff[1])
+                                # self.draw_dot(image, before[0], before[1])
+                                # self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = 2 * coord[1] - diff[1]
+                                self.right_lane = diff[1]
+                                # diff = (diff[0] - before[0], diff[1] - before[1])
                         elif left is not None:
                             diff = self.find_inclination(image, self.result, x - (inc * jump), left[0])
                             if diff is not None:
                                 coord = (diff[0], diff[1] + (self.lane_width // 2))
-                                before = (x - (inc * jump), left[0])
-                                self.draw_dot(image, before[0], before[1])
-                                self.draw_dot(image, diff[0], diff[1])
-                                self.left_lane = left[0]
-                                self.right_lane = 2 * self.center_point[1] - left[0]
-                                diff = (diff[0] - before[0], diff[1] - before[1])
+                                before = (x - (inc * jump), left[0] + diff[1])
+                                # self.draw_dot(image, before[0], before[1])
+                                # self.draw_dot(image, diff[0], diff[1])
+                                self.left_lane = diff[1]
+                                self.right_lane = 2 * coord[1] - diff[1]
+                                # diff = (diff[0] - before[0], diff[1] - before[1])
             if flag is True:
                 break
         # if vision cannot find both car lane and cannot specify the target point
         # calculate the target point by inclination of single car lane
         if coord is not None:
             # print("setting coordinate with DIFF NONE")
+            # print(f"left: {self.left_lane} right: {self.right_lane}")
+            # self.draw_dot(self.edges, coord[0], self.left_lane)
+            # self.draw_dot(self.edges, coord[0], self.right_lane)
             # print(f"diff: {diff}")
             # print(f"lane_width: {self.lane_width}")
             # ans.append((self.center_point[0]+diff[0], self.center_point[1]+diff[1]))
@@ -810,7 +816,6 @@ class libCAMERA(object):
             return False
         return flag
 
-
     def find_obstacle(self):
         return False
 
@@ -828,7 +833,8 @@ class libCAMERA(object):
 
         self.draw_dot(self.edges, X, self.left_lane)
         self.draw_dot(self.edges, X, self.right_lane)
-        # print(f"left count: {left_count}, right count: {right_count}")
+        self.draw_dot(self.edges, ans[0][0], ans[0][1])
+        print(f"left count: {left_count}, right count: {right_count}")
 
         if left_count > right_count:
             self.cur_lane = "left"
