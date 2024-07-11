@@ -24,7 +24,7 @@ print(f"fetching first data from lidar")
 t1 = time.time()
 # cap = cv2.VideoCapture(video_file)
 # env.fetch_image_video(cap)
-lidar.fetch_scanning()
+# lidar.fetch_scanning()
 env.send_signal_to_arduino(comm, 60, 144)
 
 t = 0.08
@@ -118,14 +118,22 @@ for i in range(EPOCH):
     # print(f"frameNum: {frameNum}")
     # image = env.file_read("data/image"+str(img_num)+".png")
     # # _, image = env.camera_read(ch0)
-    if lidar.check_scanning():
+    for scan in lidar.scanning():
         # t2 = time.time()
         # print(f"liDAR data get in frame")
         # t1 = t2
-        scan = lidar.read_scanning()
-        scan = lidar.getAngleDistanceRange(scan, 280, 300, 100, 2000)
-        if scan:
-            print(f"stop!!!!!: {frameNum}")
+        # scan = lidar.read_scanning()
+        # scan = lidar.getAngleDistanceRange(scan, 280, 300, 100, 2000)
+        flag = lidar.getAngleDistanceRange(scan, 260, 280, 100, 1000)
+        flag2 = lidar.getAngleDistanceRange(scan, 260, 280, 1500, 2000)
+        # if scan:
+        #     print(f"stop!!!!!: {frameNum}")
+        #     frameNum += 1
+        if flag:
+            print(f"1 :{frameNum}")
+            frameNum += 1
+        if flag2:
+            print(f"2 :{frameNum}")
             frameNum += 1
     # print("Start!")
     # t3 = time.time()

@@ -94,6 +94,7 @@ class libLIDAR(object):
     def __init__(self, port):
         self.rpm = 0
         self.lidar = RPLidar(port)
+        self.lidar.clean_input()
         self.scan = []
         self.q = queue.Queue()
         self.t = None
@@ -135,7 +136,7 @@ class libLIDAR(object):
 
     def read_scanning(self):
         data = self.q.get()
-        # print(f"queue data: {self.q.qsize()}")
+        print(f"queue data: {self.q.qsize()}")
         return data
 
     def fetch_scanning_threads(self, event):

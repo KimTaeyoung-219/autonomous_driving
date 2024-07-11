@@ -41,30 +41,59 @@ if __name__ == "__main__":
     t1 = time.time()
     print_stage("STAGE1", True)
     env.send_signal_to_arduino(comm, 70, 144)
-    lidar.fetch_scanning()
+
+    t2 = time.time()
     while True:
-        if lidar.check_scanning():
-            lidar_data = lidar.read_scanning()
-            print("LiDAR data received")
-            flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 1000)
-            flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1300, 2000)
-            if flag:
-                lidar.stop()
-                print("found!!")
-                T = 3
-                break
-            if flag2:
-                lidar.stop()
-                print("found2!!")
-                T = 10
-                break
+        t3 = time.time()
+        if t3 - t2 > 3.5:
+            print("getting LiDAR data")
+            break
+    # lidar.fetch_scanning()
+    # while True:
+    #     if lidar.check_scanning():
+    #         lidar_data = lidar.read_scanning()
+    #         print("LiDAR data received")
+    #         flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 1000)
+    #         flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1300, 2000)
+    #         if flag:
+    #             # lidar.stop()
+    #             print("found!!")
+    #             T = 3
+    #             break
+    #         if flag2:
+    #             # lidar.stop()
+    #             print("found2!!")
+    #             T = 10
+    #             break
+    for lidar_data in lidar.scanning():
+        print("LiDAR data received")
+        flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 1000)
+        flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1500, 2000)
+        if flag:
+            print("found!!")
+            T2 = 2.6
+            T = 16
+            break
+        if flag2:
+            print("found2!!")
+            T2 = 3.2
+            T = 19
+            break
     # stop
     print_stage("STAGE2", True)
     t2 = time.time()
-    env.send_signal_to_arduino(comm, 0, 140)
+    env.send_signal_to_arduino(comm, 0, 144)
     while True:
         t3 = time.time()
         if t3 - t2 > 2:
+            break
+    # move foward
+    print_stage("STAGE2.5", True)
+    t2 = time.time()
+    env.send_signal_to_arduino(comm, 70, 144)
+    while True:
+        t3 = time.time()
+        if t3 - t2 > T2:
             break
 
     # move foward left
@@ -73,7 +102,7 @@ if __name__ == "__main__":
     env.send_signal_to_arduino(comm, 70, 168)
     while True:
         t4 = time.time()
-        if t4 - t3 > 12:
+        if t4 - t3 > 12.8:
             break
 
     # stop
@@ -85,6 +114,7 @@ if __name__ == "__main__":
         if t5 - t4 > 2:
             break
 
+    # move foward
     t4 = time.time()
     env.send_signal_to_arduino(comm, 1000, 144)
     while True:
@@ -100,21 +130,25 @@ if __name__ == "__main__":
 
     # move backward, parking, stop
     print_stage("STAGE5", True)
+    t2 = time.time()
     while True:
         _, image = env.camera_read(ch0)
         crosswalk_image = env.convert_crosswalk_image(image)
         result, ans, edges = go_backward(env, image)
         speed, angle = env.get_speed_angle(ans)
-        speed = 1000
-        angle = 280 - angle
-        if angle > 168:
-            angle = 168
-        if angle < 112:
-            angle = 112
+        # speed = 1000
+        # angle = 280 - angle
+        # if angle > 168:
+        #     angle = 168
+        # if angle < 112:
+        #     angle = 112
             # env.send_signal_to_arduino(comm, speed, angle)
         env.image_show(result, edges)
+        t3 = time.time()
+        if t3 - t2 > 2:
+            break
         # if env.find_crosswalk(crosswalk_image):
-        #     env.send_signal_to_arduino(comm, 0, 14)
+        #     # env.send_signal_to_arduino(comm, 0, 14)
         #     time.sleep(2)
         #     break
         key = env.wait_key()
@@ -122,7 +156,7 @@ if __name__ == "__main__":
     # stop
     print_stage("STAGE6", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 0, 0)
+    env.send_signal_to_arduino(comm, 0, 144)
     while True:
         t5 = time.time()
         if t5 - t4 > 2:
@@ -131,25 +165,25 @@ if __name__ == "__main__":
     # move forward
     print_stage("STAGE7", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 70, 0)
+    env.send_signal_to_arduino(comm, 70, 144)
     while True:
         t5 = time.time()
-        if t5 - t4 > 10:
+        if t5 - t4 > 4:
             break
 
     # move left
     print_stage("STAGE8", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 70, 28)
+    env.send_signal_to_arduino(comm, 70, 168)
     while True:
         t5 = time.time()
-        if t5 - t4 > 10:
+        if t5 - t4 > 12.85:
             break
 
     # move forward
     print_stage("STAGE9", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 70, 14)
+    env.send_signal_to_arduino(comm, 70, 144)
     while True:
         t5 = time.time()
         if t5 - t4 > 30:
