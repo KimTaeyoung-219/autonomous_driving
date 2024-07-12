@@ -11,14 +11,14 @@ save_num = 60000
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value = 0, max_speed = 250)
+    env = fl.libCAMERA(wait_value = 10, max_speed = 250)
     time_check = False
     # arduino
-    # ser = fl.libARDUINO()
-    # comm = ser.init(arduino_port, 9600)
+    ser = fl.libARDUINO()
+    comm = ser.init(arduino_port, 9600)
     #
     # Camera Initial Setting
-    # ch0, ch1 = env.initial_setting(capnum=1)
+    ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
     # input("start!")
@@ -28,12 +28,12 @@ if __name__ == "__main__":
         # reading source
         if time_check:
             t1 = time.time()
-        # _, image = env.camera_read(ch0)
+        _, image = env.camera_read(ch0)
         # Camera using Thread
         # image = env.read_image_thread()
         # env.fetch_image_camera(channel=ch0)
 
-        image = env.file_read("output/image"+str(img_num)+".png")
+        # image = env.file_read("output/image"+str(img_num)+".png")
 
         # extracting valid region from image
         if time_check:
@@ -55,12 +55,11 @@ if __name__ == "__main__":
         if time_check:
             t5 = time.time()
         speed, angle = env.get_speed_angle(ans)
-        env.find_car_lane(edges, ans)
 
         # send data to arduino
         if time_check:
             t6 = time.time()
-        # env.send_signal_to_arduino(comm, speed, angle, change_speed = False)
+        env.send_signal_to_arduino(comm, speed, angle, change_speed = False)
 
         # print image of final results
         if time_check:

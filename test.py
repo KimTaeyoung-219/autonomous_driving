@@ -124,8 +124,8 @@ for i in range(EPOCH):
         # t1 = t2
         # scan = lidar.read_scanning()
         # scan = lidar.getAngleDistanceRange(scan, 280, 300, 100, 2000)
-        flag = lidar.getAngleDistanceRange(scan, 260, 280, 100, 1000)
-        flag2 = lidar.getAngleDistanceRange(scan, 260, 280, 1500, 2000)
+        flag = lidar.getAngleDistanceRange(scan, 268, 273, 100, 1000)
+        flag2 = lidar.getAngleDistanceRange(scan, 268, 273, 1600, 2000)
         # if scan:
         #     print(f"stop!!!!!: {frameNum}")
         #     frameNum += 1

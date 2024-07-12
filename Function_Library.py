@@ -136,7 +136,7 @@ class libLIDAR(object):
 
     def read_scanning(self):
         data = self.q.get()
-        print(f"queue data: {self.q.qsize()}")
+        # print(f"queue data: {self.q.qsize()}")
         return data
 
     def fetch_scanning_threads(self, event):
@@ -410,7 +410,7 @@ class libCAMERA(object):
         end_index = start_index + pre_image.shape[1]
 
         image[:, start_index:end_index, :] = pre_image
-        self.set_valid_image_parameter(belowX=100, upperX=880)
+        self.set_valid_image_parameter(belowX=100, upperX=960)
         return image
 
     def extract_valid_image(self, image):
@@ -782,8 +782,8 @@ class libCAMERA(object):
         # self.valid_Y = 480
         # self.valid_X = 640
         # self.center_point = (470, 320)
-        x_start = 700
-        x_end = 1220
+        x_start = 300
+        x_end = 1620
         y_start = 730
         y_end = 750
         total = (x_end - x_start) * (y_end - y_start)

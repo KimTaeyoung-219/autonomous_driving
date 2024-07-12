@@ -6,7 +6,8 @@ COLOR = ("RED", "GREEN", "BLUE", "YELLOW")
 arduino_port = "/dev/cu.usbmodem1301"
 lidar_port = "/dev/cu.usbserial-0001"
 img_num = 0
-
+save_num = 80000
+save_image = True
 
 def print_stage(stage, flag):
     if flag is False:
@@ -28,7 +29,7 @@ def go_forward(env, image):
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10, max_speed=160)
+    env = fl.libCAMERA(wait_value=10, max_speed=200)
     time_check = False
     stage_check = True
     # change lane to ${change_lane}
@@ -59,7 +60,7 @@ if __name__ == "__main__":
         if time_check:
             t1 = time.time()
         # _, image = env.camera_read(ch0)
-        _, image, _, image2 = env.camera_read(ch0, ch1)
+        _, image2, _, image = env.camera_read(ch0, ch1)
         # _, image2 = env.camera_read(ch1)
         # Camera using Thread
         # image = env.read_image_thread()
@@ -87,7 +88,7 @@ if __name__ == "__main__":
             if lidar.check_scanning():
                 lidar_data = lidar.read_scanning()
                 print("First LiDAR data received")
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 300, 2000)
+                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 100, 2500)
                 if flag:
                     env.stage = "LEFT"
                     change_lane = "left"
@@ -127,10 +128,11 @@ if __name__ == "__main__":
                 env.stage = "NONE"
                 state = None
                 print_stage("STAGE 5", stage_check)
-                a = pred
+                a = 40
                 stage = 5
         elif stage == 5:  # when find crosswalk_image, stop for 2 sec and move straight
-            if env.find_crosswalk(crosswalk_image):
+            a -= 1
+            if env.find_crosswalk(crosswalk_image) and a <= 0:
                 env.send_signal_to_arduino(comm, 0, 140)
                 stage = 6
                 print_stage("STAGE 6", stage_check)
@@ -182,6 +184,10 @@ if __name__ == "__main__":
             print(f"find target point: {t3 - t2}")
             print(f"modify target point: {t4 - t3}")
             print(f"send to arduino: {t6 - t4}\n")
+
+        if save_image:
+            # env.save_file(image, "output/image" + str(save_num))
+            save_num += 1
 
         # Process Termination (If you input the 'q', camera scanning is ended.)
         key = env.wait_key()

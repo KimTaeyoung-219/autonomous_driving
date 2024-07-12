@@ -71,12 +71,12 @@ if __name__ == "__main__":
         flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1500, 2000)
         if flag:
             print("found!!")
-            T2 = 2.6
+            T2 = 2.1
             T = 16
             break
         if flag2:
             print("found2!!")
-            T2 = 3.2
+            T2 = 2.8
             T = 19
             break
     # stop
