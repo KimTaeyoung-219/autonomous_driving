@@ -29,13 +29,13 @@ def go_forward(env, image):
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10, max_speed=200)
+    env = fl.libCAMERA(wait_value=10, max_speed=220)
     time_check = False
     stage_check = True
     # change lane to ${change_lane}
     change_lane = "left"
     state = None
-    pred = 15 # left 35 right 5
+    pred = 12 # left 35 right 5
     a = pred
     stage = 1
     # arduino
@@ -45,12 +45,12 @@ if __name__ == "__main__":
     lidar = fl.libLIDAR(lidar_port)
 
     # Camera Initial Setting
-    ch0, ch1 = env.initial_setting(capnum=2)
+    ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
     # LiDAR using Thread
     lidar.fetch_scanning()
-
+    env.send_signal_to_arduino(comm, 0, 144)
     input("if start, press ENTER!!")
 
     # Camera Reading..
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         if time_check:
             t1 = time.time()
         # _, image = env.camera_read(ch0)
-        _, image2, _, image = env.camera_read(ch0, ch1)
-        # _, image2 = env.camera_read(ch1)
+        # _, image2, _, image = env.camera_read(ch0, ch1)
+        _, image = env.camera_read(ch0)
         # Camera using Thread
         # image = env.read_image_thread()
         # env.fetch_image_camera(channel=ch0)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
             if lidar.check_scanning():
                 lidar_data = lidar.read_scanning()
                 print("First LiDAR data received")
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 100, 2500)
+                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 100, 2600)
                 if flag:
                     env.stage = "LEFT"
                     change_lane = "left"
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             if lidar.check_scanning():
                 print("Second LiDAR data received")
                 lidar_data = lidar.read_scanning()
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 300, 2000)
+                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 300, 2400)
                 if flag:
                     env.stage = "RIGHT"
                     change_lane = "right"
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                 env.stage = "NONE"
                 state = None
                 print_stage("STAGE 5", stage_check)
-                a = 40
+                a = 60
                 stage = 5
         elif stage == 5:  # when find crosswalk_image, stop for 2 sec and move straight
             a -= 1
@@ -136,7 +136,7 @@ if __name__ == "__main__":
                 env.send_signal_to_arduino(comm, 0, 140)
                 stage = 6
                 print_stage("STAGE 6", stage_check)
-                gp = env.find_green_traffic_light(image2)
+                gp = env.find_green_traffic_light(image)
                 env.green_pixel = gp
                 env.max_speed = 0
                 # env.send_signal_to_arduino(comm, 60, 14)
@@ -145,11 +145,11 @@ if __name__ == "__main__":
                 # time.sleep(2)
                 # stage = 6
         elif stage == 6:
-            gp = env.find_green_traffic_light(image2)
+            gp = env.find_green_traffic_light(image)
             if (gp - env.green_pixel) > 7000:
                 env.send_signal_to_arduino(comm, 60, 140)
                 time.sleep(2)
-                env.max_speed = 100
+                env.max_speed = 170
                 stage = 7
             else:
                 continue
@@ -157,6 +157,7 @@ if __name__ == "__main__":
         # clear lidar buffer when stage is not using lidar data
         if stage == 2 or stage == 4 or stage == 5 or stage == 6 or stage == 7:
             if lidar.check_scanning() is True:
+                print("Dump LiDAR data received")
                 lidar_data = lidar.read_scanning()
 
         # get speed and angle of the car
@@ -175,7 +176,7 @@ if __name__ == "__main__":
         # print image of final results
         if time_check:
             t6 = time.time()
-        env.image_show(result, edges, crosswalk_image, image2)
+        env.image_show(result, edges, crosswalk_image, image)
         # env.image_show(image, edges)
 
         if time_check:

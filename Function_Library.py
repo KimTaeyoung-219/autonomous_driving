@@ -721,7 +721,7 @@ class libCAMERA(object):
             x = ans[0][0]
             y = ans[0][1]
             angle = y - self.center_point[1]
-            tangent = angle / (self.center_point[0] - x + 180)
+            tangent = angle / (self.center_point[0] - x + 240) # 180
             inverse_tan = np.arctan(tangent)
             angle_in_degrees = inverse_tan * (180 / np.pi)
 
@@ -783,7 +783,7 @@ class libCAMERA(object):
         # self.valid_X = 640
         # self.center_point = (470, 320)
         x_start = 300
-        x_end = 1620
+        x_end = 820
         y_start = 730
         y_end = 750
         total = (x_end - x_start) * (y_end - y_start)
