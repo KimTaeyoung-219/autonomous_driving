@@ -243,6 +243,7 @@ class libCAMERA(object):
         self.cur_lane = "right"
         self.stage="NONE"
         self.green_pixel = 0
+        self.before_angle = 144
 
     def wait_key(self):
         key = cv2.waitKey(self.wait_value) & 0xFF

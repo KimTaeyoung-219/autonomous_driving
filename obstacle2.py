@@ -38,6 +38,7 @@ if __name__ == "__main__":
     pred = 12 # left 35 right 5
     a = pred
     stage = 1
+    lidar_num = 0
     # arduino
     ser = fl.libARDUINO()
     lidar = None
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     # LiDAR using Thread
     lidar.fetch_scanning()
     env.send_signal_to_arduino(comm, 0, 144)
-    input("if start, press ENTER!!")
+    input("if obstacle, press ENTER!!")
 
     # Camera Reading..
     print_stage("STAGE 1", stage_check)
@@ -87,8 +88,9 @@ if __name__ == "__main__":
         if stage == 1:  # when starts, change lane to left immediately
             if lidar.check_scanning():
                 lidar_data = lidar.read_scanning()
-                print("First LiDAR data received")
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 100, 2600)
+                print(f"First LiDAR data received: {lidar_num}")
+                lidar_num += 1
+                flag = lidar.getAngleDistanceRange(lidar_data, 165, 195, 100, 2000)
                 if flag:
                     env.stage = "LEFT"
                     change_lane = "left"
@@ -109,9 +111,10 @@ if __name__ == "__main__":
                 stage = 3
         elif stage == 3:  # when find obstacle2 in front, change lane to right
             if lidar.check_scanning():
-                print("Second LiDAR data received")
+                print(f"Second LiDAR data received: {lidar_num}")
+                lidar_num += 1
                 lidar_data = lidar.read_scanning()
-                flag = lidar.getAngleDistanceRange(lidar_data, 170, 190, 300, 2400)
+                flag = lidar.getAngleDistanceRange(lidar_data, 165, 195, 300, 2000)
                 if flag:
                     env.stage = "RIGHT"
                     change_lane = "right"
@@ -157,7 +160,8 @@ if __name__ == "__main__":
         # clear lidar buffer when stage is not using lidar data
         if stage == 2 or stage == 4 or stage == 5 or stage == 6 or stage == 7:
             if lidar.check_scanning() is True:
-                print("Dump LiDAR data received")
+                print(f"Dump LiDAR data received: {lidar_num}")
+                lidar_num += 1
                 lidar_data = lidar.read_scanning()
 
         # get speed and angle of the car

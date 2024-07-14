@@ -33,9 +33,10 @@ if __name__ == "__main__":
     ch0, ch1 = env.initial_setting(capnum=1)
     comm = ser.init(arduino_port, 9600)
     lidar = fl.libLIDAR(lidar_port)
-    env.send_signal_to_arduino(comm, 0, 144)
+    time.sleep(3)
+    env.send_signal_to_arduino(comm, 0, 190)
 
-    input("Start!!")
+    input("Parking Start!!")
 
     # go straight
     t1 = time.time()
@@ -67,16 +68,16 @@ if __name__ == "__main__":
     #             break
     for lidar_data in lidar.scanning():
         print("LiDAR data received")
-        flag = lidar.getAngleDistanceRange(lidar_data, 260, 280, 100, 1000)
-        flag2 = lidar.getAngleDistanceRange(lidar_data, 260, 280, 1500, 2000)
+        flag = lidar.getAngleDistanceRange(lidar_data, 265, 275, 100, 1000)
+        flag2 = lidar.getAngleDistanceRange(lidar_data, 265, 275, 1400, 2000)
         if flag:
             print("found!!")
-            T2 = 2.1
+            T2 = 1.4
             T = 16
             break
         if flag2:
             print("found2!!")
-            T2 = 2.8
+            T2 = 1.6
             T = 19
             break
     # stop
@@ -94,6 +95,7 @@ if __name__ == "__main__":
     while True:
         t3 = time.time()
         if t3 - t2 > T2:
+            print(f"time: {t3 - t2}")
             break
 
     # move foward left
@@ -102,7 +104,7 @@ if __name__ == "__main__":
     env.send_signal_to_arduino(comm, 70, 168)
     while True:
         t4 = time.time()
-        if t4 - t3 > 12.8:
+        if t4 - t3 > 12.60:
             break
 
     # stop

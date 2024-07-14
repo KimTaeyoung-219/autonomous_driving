@@ -45,7 +45,7 @@ void loop(){
 
     val = potentiometer_Read(analogPin);
 
-    if (num%1 == 0){
+    // if (num%1 == 0){
       Serial.print("speed: ");
       Serial.println(left);
       // Serial.println(right);
@@ -53,7 +53,7 @@ void loop(){
       Serial.println(coord);
       Serial.print("val: ");
       Serial.println(val);
-    }
+    // }
 
     if (left > 500) {
       motor_forward(motorA2, motorA1, 70);
@@ -77,10 +77,12 @@ void loop(){
     }
   } else {
     val = potentiometer_Read(analogPin);
-    
-    Serial.print(val);
-    Serial.print(" ");
-    Serial.println(coord);
+    num += 1;
+    if(num % 1000 == 0){
+      Serial.print(val);
+      Serial.print(" ");
+      Serial.println(coord);
+    }
 
     if(val<coord){
       analogWrite(motorDirection1, LOW);
