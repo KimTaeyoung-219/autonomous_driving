@@ -445,7 +445,7 @@ class libCAMERA(object):
         return self.valid_image
 
     def convert_image_to_1d(self, image):
-        self.edges = cv2.Canny(image, 30, 300)
+        self.edges = cv2.Canny(image, 5, 300)
         return self.edges
 
     def convert_crosswalk_image(self, image):
@@ -729,16 +729,16 @@ class libCAMERA(object):
             self.angle = angle_in_degrees
             # 1.42 = 20 / 28 = (max angle) / (max voltage)
             # voltage: 28 -> max left, 14 -> middle, 0 -> max right
-            # 172: max left, 142: middle, 112: max right
+            # 171: max left, 140: middle, 109: max right
             # coord = angle_in_degrees / 0.357
-            coord = angle_in_degrees / 0.741
+            coord = angle_in_degrees / 0.645
             coord = int(coord)
             # print(f"coord: {coord}")
-            coord = -coord + 144
-            if coord < 112:
-                coord = 122
-            elif coord >= 168:
-                coord = 168
+            coord = -coord + 140
+            if coord < 109:
+                coord = 109
+            elif coord >= 171:
+                coord = 171
             speed = self.max_speed
             coord -= 1
             if coord == -1:
@@ -842,6 +842,10 @@ class libCAMERA(object):
             self.cur_lane = "left"
         else:
             self.cur_lane = "right"
+        # if left_count > 150 and self.cur_lane == "right":
+        #     self.cur_lane = "left"
+        # if right_count > 150 and self.cur_lane == "left":
+        #     self.cur_lane = "right"
         return image
 
     def change_car_lane(self, ans, lane):

@@ -10,7 +10,7 @@ int motorDirection2=9;
 int analogPin=A0;
 
 int val;
-int num=0;
+int num = 0;
 int coord = 140;
 int speed;
 int left, right;
@@ -62,14 +62,16 @@ void loop(){
       motor_forward(motorA1, motorA2, right);
       motor_forward(motorA3, motorA4, left);
     }
+
+    int directionDegree = 250;
     
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 250);
+      analogWrite(motorDirection2, directionDegree);
     }
     else if(val>coord){
       analogWrite(motorDirection1, 250);
-      analogWrite(motorDirection2, LOW);
+      analogWrite(motorDirection2, directionDegree);
     }
     else if(val==coord){
       analogWrite(motorDirection1, LOW);
@@ -84,12 +86,14 @@ void loop(){
       Serial.println(coord);
     }
 
+    int directionDegree = 200;
+
     if(val<coord){
       analogWrite(motorDirection1, LOW);
-      analogWrite(motorDirection2, 200);
+      analogWrite(motorDirection2, directionDegree);
     }
     else if(val>coord){
-      analogWrite(motorDirection1, 200);
+      analogWrite(motorDirection1, directionDegree);
       analogWrite(motorDirection2, LOW);
     }
     else if(val==coord){

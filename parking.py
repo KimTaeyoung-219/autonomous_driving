@@ -34,14 +34,20 @@ if __name__ == "__main__":
     comm = ser.init(arduino_port, 9600)
     lidar = fl.libLIDAR(lidar_port)
     time.sleep(3)
-    env.send_signal_to_arduino(comm, 0, 190)
+    straight = 144
+    backward = 140
+    left = 200
+    right = 100
+    T3 = 11.3
+    T4 = 11
+    env.send_signal_to_arduino(comm, 0, straight)
 
     input("Parking Start!!")
 
     # go straight
     t1 = time.time()
     print_stage("STAGE1", True)
-    env.send_signal_to_arduino(comm, 70, 144)
+    env.send_signal_to_arduino(comm, 70, straight)
 
     t2 = time.time()
     while True:
@@ -68,22 +74,22 @@ if __name__ == "__main__":
     #             break
     for lidar_data in lidar.scanning():
         print("LiDAR data received")
-        flag = lidar.getAngleDistanceRange(lidar_data, 265, 275, 100, 1000)
-        flag2 = lidar.getAngleDistanceRange(lidar_data, 265, 275, 1400, 2000)
+        flag = lidar.getAngleDistanceRange(lidar_data, 265, 275, 100, 900)
+        flag2 = lidar.getAngleDistanceRange(lidar_data, 267, 273, 1100, 2000)
         if flag:
             print("found!!")
-            T2 = 1.4
-            T = 16
+            T2 = 2.5
+            T = 14
             break
         if flag2:
             print("found2!!")
-            T2 = 1.6
-            T = 19
+            T2 = 2.7
+            T = 17
             break
     # stop
     print_stage("STAGE2", True)
     t2 = time.time()
-    env.send_signal_to_arduino(comm, 0, 144)
+    env.send_signal_to_arduino(comm, 0, straight)
     while True:
         t3 = time.time()
         if t3 - t2 > 2:
@@ -91,7 +97,7 @@ if __name__ == "__main__":
     # move foward
     print_stage("STAGE2.5", True)
     t2 = time.time()
-    env.send_signal_to_arduino(comm, 70, 144)
+    env.send_signal_to_arduino(comm, 70, straight)
     while True:
         t3 = time.time()
         if t3 - t2 > T2:
@@ -101,30 +107,30 @@ if __name__ == "__main__":
     # move foward left
     print_stage("STAGE3", True)
     t3 = time.time()
-    env.send_signal_to_arduino(comm, 70, 168)
+    env.send_signal_to_arduino(comm, 70, left)
     while True:
         t4 = time.time()
-        if t4 - t3 > 12.60:
+        if t4 - t3 > T3:
             break
 
     # stop
     print_stage("STAGE4", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 0, 144)
+    env.send_signal_to_arduino(comm, 0, straight)
     while True:
         t5 = time.time()
         if t5 - t4 > 2:
             break
 
-    # move foward
+    # move backward
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 1000, 144)
+    env.send_signal_to_arduino(comm, 1000, backward)
     while True:
         t5 = time.time()
         if t5 - t4 > T:
             break
 
-    env.send_signal_to_arduino(comm, 0, 144)
+    env.send_signal_to_arduino(comm, 0, straight)
     while True:
         t5 = time.time()
         if t5 - t4 > 2:
@@ -158,7 +164,7 @@ if __name__ == "__main__":
     # stop
     print_stage("STAGE6", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 0, 144)
+    env.send_signal_to_arduino(comm, 0, straight)
     while True:
         t5 = time.time()
         if t5 - t4 > 2:
@@ -167,29 +173,29 @@ if __name__ == "__main__":
     # move forward
     print_stage("STAGE7", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 70, 144)
+    env.send_signal_to_arduino(comm, 70, straight)
     while True:
         t5 = time.time()
         if t5 - t4 > 4:
             break
 
-    # move left
+    # move right
     print_stage("STAGE8", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 70, 168)
+    env.send_signal_to_arduino(comm, 70, right)
     while True:
         t5 = time.time()
-        if t5 - t4 > 12.85:
+        if t5 - t4 > T4:
             break
 
     # move forward
     print_stage("STAGE9", True)
     t4 = time.time()
-    env.send_signal_to_arduino(comm, 70, 144)
+    env.send_signal_to_arduino(comm, 170, straight)
     while True:
         t5 = time.time()
-        if t5 - t4 > 30:
+        if t5 - t4 > 10:
             break
 
     # stop
-    env.send_signal_to_arduino(comm, 0, 14)
+    env.send_signal_to_arduino(comm, 0, straight)

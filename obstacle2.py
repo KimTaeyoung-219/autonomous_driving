@@ -29,13 +29,15 @@ def go_forward(env, image):
 if __name__ == "__main__":
     # Exercise Environment Setting
     # camera
-    env = fl.libCAMERA(wait_value=10, max_speed=220)
+    env = fl.libCAMERA(wait_value=10, max_speed=240)
     time_check = False
     stage_check = True
     # change lane to ${change_lane}
     change_lane = "left"
     state = None
-    pred = 12 # left 35 right 5
+    pred = 16 # front: 18, 11 # left 35 right 5
+    pred2 = 12 # front 12, 9
+    stage8 = 25
     a = pred
     stage = 1
     lidar_num = 0
@@ -50,9 +52,9 @@ if __name__ == "__main__":
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
     # LiDAR using Thread
+    env.send_signal_to_arduino(comm, 0, 140)
+    input("Obstacle start!!")
     lidar.fetch_scanning()
-    env.send_signal_to_arduino(comm, 0, 144)
-    input("if obstacle, press ENTER!!")
 
     # Camera Reading..
     print_stage("STAGE 1", stage_check)
@@ -90,24 +92,30 @@ if __name__ == "__main__":
                 lidar_data = lidar.read_scanning()
                 print(f"First LiDAR data received: {lidar_num}")
                 lidar_num += 1
-                flag = lidar.getAngleDistanceRange(lidar_data, 165, 195, 100, 2000)
+                flag = lidar.getAngleDistanceRange(lidar_data, 165, 185, 100, 3300)
                 if flag:
                     env.stage = "LEFT"
                     change_lane = "left"
-                    print_stage("STAGE 2", stage_check)
-                    stage = 2
+                    print_stage("STAGE 8", stage_check)
+                    stage = 8
+        elif stage == 8:
+            if stage8 <= 0:
+                stage = 2
+                print_stage("STAGE 2", stage_check)
+            else:
+                stage8 -= 1
         elif stage == 2:  # stay in line when the car move to the left side of obstacle1
             edges = env.find_car_lane(edges, ans)
             if a > 0 or env.cur_lane != change_lane:
                 ans = env.change_car_lane(ans, change_lane)
-                state = 161
+                state = 171
                 print(f"Go left: {a}")
                 a -= 1
             else:
                 env.stage = "NONE"
                 state = None
                 print_stage("STAGE 3", stage_check)
-                a = pred
+                a = pred2
                 stage = 3
         elif stage == 3:  # when find obstacle2 in front, change lane to right
             if lidar.check_scanning():
@@ -124,7 +132,7 @@ if __name__ == "__main__":
             edges = env.find_car_lane(edges, ans)
             if a > 0 or env.cur_lane != change_lane:
                 ans = env.change_car_lane(ans, change_lane)
-                state = 119
+                state = 115
                 print(f"Go right: {a}")
                 a -= 1
             else:
@@ -135,6 +143,8 @@ if __name__ == "__main__":
                 stage = 5
         elif stage == 5:  # when find crosswalk_image, stop for 2 sec and move straight
             a -= 1
+            if a <= 0:
+                env.max_speed = 160
             if env.find_crosswalk(crosswalk_image) and a <= 0:
                 env.send_signal_to_arduino(comm, 0, 140)
                 stage = 6
@@ -149,16 +159,16 @@ if __name__ == "__main__":
                 # stage = 6
         elif stage == 6:
             gp = env.find_green_traffic_light(image)
-            if (gp - env.green_pixel) > 7000:
+            if (gp - env.green_pixel) > 4500:
                 env.send_signal_to_arduino(comm, 60, 140)
                 time.sleep(2)
-                env.max_speed = 170
+                env.max_speed = 250
                 stage = 7
             else:
                 continue
 
         # clear lidar buffer when stage is not using lidar data
-        if stage == 2 or stage == 4 or stage == 5 or stage == 6 or stage == 7:
+        if stage == 2 or stage == 4 or stage == 5 or stage == 6 or stage == 7 or stage == 8:
             if lidar.check_scanning() is True:
                 print(f"Dump LiDAR data received: {lidar_num}")
                 lidar_num += 1

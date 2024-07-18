@@ -21,7 +21,7 @@ if __name__ == "__main__":
     ch0, ch1 = env.initial_setting(capnum=1)
     # Camera using Thread
     # env.fetch_image_camera(channel=ch0)
-    input("driving start!")
+    input("Driving start!")
 
     # Camera Reading..
     while True:
