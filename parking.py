@@ -84,7 +84,7 @@ if __name__ == "__main__":
         if flag2:
             print("found2!!")
             T2 = 2.7
-            T = 17
+            T = 16
             break
     # stop
     print_stage("STAGE2", True)

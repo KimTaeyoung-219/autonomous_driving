@@ -36,7 +36,7 @@ if __name__ == "__main__":
     change_lane = "left"
     state = None
     pred = 16 # front: 18, 11 # left 35 right 5
-    pred2 = 12 # front 12, 9
+    pred2 = 11 # front 12, 9
     stage8 = 25
     a = pred
     stage = 1
